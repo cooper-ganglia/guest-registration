@@ -3,7 +3,8 @@ const fileInput = document.getElementById('fileInput');
 const mediaQueue = document.getElementById('mediaQueue');
 const thumbnailQueue = document.getElementById('thumbnailQueue');
 const addGraphicsBtn = document.getElementById('addGraphicsBtn');
-const uploadArea = document.getElementById('uploadArea');
+const mainDropZone = document.getElementById('mainDropZone');
+const modalUploadArea = document.getElementById('modalUploadArea');
 let mediaItems = [];
 let guestIndex = 0;
 let signatures = {};
@@ -152,33 +153,38 @@ function openGroupsModal() {
 openGroupsManagerGraphics.addEventListener('click', openGroupsModal);
 openGroupsManagerModal.addEventListener('click', openGroupsModal);
 
-// Drag and Drop for Media Upload
-uploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadArea.style.backgroundColor = '#e5e5ea';
-});
+// Drag and Drop Handlers
+function setupDragAndDrop(element) {
+    element.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        element.classList.add('dragover');
+    });
 
-uploadArea.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    uploadArea.style.backgroundColor = '#fff';
-});
+    element.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        element.classList.remove('dragover');
+    });
 
-uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.style.backgroundColor = '#fff';
-    const files = Array.from(e.dataTransfer.files).filter(file => 
-        file.type.startsWith('image/') || file.type.startsWith('video/')
-    );
-    if (mediaItems.length + files.length > 20) {
-        alert('Maximum of 20 items allowed.');
-        return;
-    }
-    const newMediaItems = files.map(file => ({ file, group: '', description: '' }));
-    mediaItems = mediaItems.concat(newMediaItems);
-    regroupMediaItems();
-    displayMediaItems();
-    updateThumbnailQueueDebounced();
-});
+    element.addEventListener('drop', (e) => {
+        e.preventDefault();
+        element.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files).filter(file => 
+            file.type.startsWith('image/') || file.type.startsWith('video/')
+        );
+        if (mediaItems.length + files.length > 20) {
+            alert('Maximum of 20 items allowed.');
+            return;
+        }
+        const newMediaItems = files.map(file => ({ file, group: '', description: '' }));
+        mediaItems = mediaItems.concat(newMediaItems);
+        regroupMediaItems();
+        displayMediaItems();
+        updateThumbnailQueueDebounced();
+    });
+}
+
+setupDragAndDrop(mainDropZone);
+setupDragAndDrop(modalUploadArea);
 
 // File Input Upload
 fileInput.addEventListener('change', (e) => {
@@ -830,13 +836,11 @@ form.addEventListener('submit', (e) => {
 
     console.log('Form data ready to submit:', formData);
 
-    // Hide floating button after submission
     floatingAddGraphics.style.display = 'none';
 
     const thankYouOverlay = document.getElementById('thankYouOverlay');
     thankYouOverlay.style.display = 'flex';
 
-    // Generate ZIP file once and reuse
     const generateZip = () => {
         const zip = new JSZip();
         const { jsPDF } = window.jspdf;
@@ -969,28 +973,8 @@ form.addEventListener('submit', (e) => {
 
         generateZip().then(zip => {
             zip.generateAsync({ type: "blob" }).then((content) => {
-                // Simulate email sending (client-side placeholder)
                 console.log(`Simulating email of ZIP file to ${email}`);
                 alert(`Forms would be emailed to ${email}. (This is a simulation—actual emailing requires server-side setup.)`);
-
-                // For actual email, you'd need a server endpoint, e.g.:
-                /*
-                const emailFormData = new FormData();
-                emailFormData.append('email', email);
-                emailFormData.append('file', content, '3abn_registration_forms.zip');
-                fetch('/send-email', {
-                    method: 'POST',
-                    body: emailFormData
-                }).then(response => {
-                    if (response.ok) {
-                        alert(`Forms emailed to ${email}`);
-                        thankYouOverlay.style.display = 'none';
-                    } else {
-                        alert('Failed to send email.');
-                    }
-                });
-                */
-
                 thankYouOverlay.style.display = 'none';
             });
         });
