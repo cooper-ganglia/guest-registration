@@ -129,9 +129,8 @@
             <div class="graphics-column">
                 <section class="card sticky" id="graphicsSection">
                     <h2>Graphics</h2>
-                    <p class="info">Click a thumbnail or use buttons to manage up to 20 images or videos. Order matters for our graphics team.</p>
-                    <div id="thumbnailQueue" class="thumbnail-queue"></div>
-                    <button type="button" id="addGraphicsBtn" class="group-manager-btn">Add Graphics</button>
+                    <p class="info">Manage up to 20 images or videos. Order matters for our graphics team.</p>
+                    <div id="mediaQueue" class="media-queue"></div>
                     <button type="button" id="openGroupsManagerGraphics" class="group-manager-btn">Manage Groups</button>
                 </section>
                 <div class="drop-zone" id="mainDropZone">
@@ -239,25 +238,6 @@
             </div>
             <div class="form-group signature-input">
                 <button type="button" id="signBtn">Sign</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Graphics -->
-    <div id="graphicsModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close" id="graphicsClose">×</span>
-            <h2>Graphics Manager</h2>
-            <div class="graphics-content">
-                <div class="drop-zone" id="modalDropZone">
-                    <img src="upload-icon.png" alt="Upload Icon" class="upload-icon">
-                    <p>Drag & Drop Images or Videos Here</p>
-                    <p>or</p>
-                    <label for="modalFileInput" class="upload-label">Browse Files</label>
-                    <input type="file" id="modalFileInput" multiple accept="image/*,video/*">
-                </div>
-                <div id="mediaQueue"></div>
-                <button type="button" id="openGroupsManagerModal" class="group-manager-btn">Manage Groups</button>
             </div>
         </div>
     </div>
