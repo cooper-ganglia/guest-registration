@@ -223,6 +223,8 @@ function displayMediaItems() {
 
         const preview = document.createElement('div');
         preview.className = 'preview';
+        preview.style.position = 'relative';
+
         let url;
         if (mediaItem.file.type.startsWith('image/')) {
             const img = document.createElement('img');
@@ -237,17 +239,26 @@ function displayMediaItems() {
             preview.appendChild(video);
         }
         item.dataset.url = url;
-        previewWrapper.appendChild(preview);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove';
+        removeBtn.textContent = '×';
+        removeBtn.addEventListener('click', () => {
+            if (item.dataset.url) URL.revokeObjectURL(item.dataset.url);
+            mediaItems.splice(index, 1);
+            regroupMediaItems();
+            displayMediaItems();
+        });
+        preview.appendChild(removeBtn);
 
         if (mediaItem.group) {
-            const groupLabel = document.createElement('span');
-            groupLabel.className = 'group-label';
-            groupLabel.textContent = mediaItem.group;
-            previewWrapper.appendChild(groupLabel);
-            item.style.borderColor = groupColors[mediaItem.group] || '#ddd'; // Set frame color
+            const color = groupColors[mediaItem.group] || '#ddd';
+            preview.style.border = `3px solid ${color}`;
+        } else {
+            preview.style.border = '3px solid transparent';
         }
 
-        item.appendChild(previewWrapper);
+        previewWrapper.appendChild(preview);
 
         const descriptionDiv = document.createElement('div');
         descriptionDiv.className = 'description';
@@ -262,6 +273,7 @@ function displayMediaItems() {
         });
         descriptionDiv.appendChild(descLabel);
         descriptionDiv.appendChild(descInput);
+        item.appendChild(previewWrapper);
         item.appendChild(descriptionDiv);
 
         const groupSelect = document.createElement('select');
@@ -281,17 +293,6 @@ function displayMediaItems() {
             displayMediaItems();
         });
         item.appendChild(groupSelect);
-
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'remove';
-        removeBtn.textContent = '×'; // Changed to X
-        removeBtn.addEventListener('click', () => {
-            if (item.dataset.url) URL.revokeObjectURL(item.dataset.url);
-            mediaItems.splice(index, 1);
-            regroupMediaItems();
-            displayMediaItems();
-        });
-        item.appendChild(removeBtn);
 
         mediaQueue.appendChild(item);
     });
