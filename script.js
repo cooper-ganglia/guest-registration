@@ -1,11 +1,7 @@
 const form = document.getElementById('registrationForm');
 const mainFileInput = document.getElementById('mainFileInput');
-const modalFileInput = document.getElementById('modalFileInput');
 const mediaQueue = document.getElementById('mediaQueue');
-const thumbnailQueue = document.getElementById('thumbnailQueue');
-const addGraphicsBtn = document.getElementById('addGraphicsBtn');
 const mainDropZone = document.getElementById('mainDropZone');
-const modalDropZone = document.getElementById('modalDropZone');
 let mediaItems = [];
 let guestIndex = 0;
 let signatures = {};
@@ -107,10 +103,6 @@ const graphicsSection = document.getElementById('graphicsSection');
 
 floatingAddBtn.addEventListener('click', () => {
     graphicsSection.scrollIntoView({ behavior: 'smooth' });
-    setTimeout(() => {
-        graphicsModal.style.display = 'flex';
-        displayMediaItems();
-    }, 500);
 });
 
 dismissBtn.addEventListener('click', () => {
@@ -126,33 +118,15 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// Graphics Modal
-const graphicsModal = document.getElementById('graphicsModal');
-const graphicsClose = document.getElementById('graphicsClose');
+// Groups Manager Modal
+const groupsManagerModal = document.getElementById('groupsManagerModal');
 const openGroupsManagerGraphics = document.getElementById('openGroupsManagerGraphics');
-const openGroupsManagerModal = document.getElementById('openGroupsManagerModal');
 
-addGraphicsBtn.addEventListener('click', () => {
-    graphicsSection.scrollIntoView({ behavior: 'smooth' });
-    setTimeout(() => {
-        graphicsModal.style.display = 'flex';
-        displayMediaItems();
-    }, 500);
-});
-
-graphicsClose.addEventListener('click', () => graphicsModal.style.display = 'none');
-graphicsModal.addEventListener('click', (e) => {
-    if (e.target === graphicsModal) graphicsModal.style.display = 'none';
-});
-
-function openGroupsModal() {
+openGroupsManagerGraphics.addEventListener('click', () => {
     groupsManagerModal.style.display = 'flex';
     updateGroupsList();
     document.querySelectorAll('.color-option').forEach(option => option.classList.remove('selected'));
-}
-
-openGroupsManagerGraphics.addEventListener('click', openGroupsModal);
-openGroupsManagerModal.addEventListener('click', openGroupsModal);
+});
 
 // Drag and Drop Handlers
 function setupDragAndDrop(dropZone, fileInput) {
@@ -197,56 +171,9 @@ function handleFiles(files) {
     mediaItems = mediaItems.concat(newMediaItems);
     regroupMediaItems();
     displayMediaItems();
-    updateThumbnailQueueDebounced();
 }
 
 setupDragAndDrop(mainDropZone, mainFileInput);
-setupDragAndDrop(modalDropZone, modalFileInput);
-
-// Debounce function
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-const updateThumbnailQueueDebounced = debounce(() => {
-    updateThumbnailQueue();
-}, 300);
-
-// Display Thumbnails on Main Page
-function updateThumbnailQueue() {
-    thumbnailQueue.innerHTML = '';
-    mediaItems.forEach((mediaItem, index) => {
-        const thumbnail = document.createElement('div');
-        thumbnail.className = 'thumbnail-item';
-        let url;
-        if (mediaItem.file.type.startsWith('image/')) {
-            const img = document.createElement('img');
-            url = URL.createObjectURL(mediaItem.file);
-            img.src = url;
-            thumbnail.appendChild(img);
-        } else if (mediaItem.file.type.startsWith('video/')) {
-            const video = document.createElement('video');
-            url = URL.createObjectURL(mediaItem.file);
-            video.src = url;
-            video.muted = true;
-            thumbnail.appendChild(video);
-        }
-        thumbnail.dataset.url = url;
-        thumbnail.addEventListener('click', () => {
-            graphicsModal.style.display = 'flex';
-            displayMediaItems();
-        });
-        thumbnailQueue.appendChild(thumbnail);
-    });
-}
 
 // Regroup media items
 function regroupMediaItems() {
@@ -280,37 +207,19 @@ function displayMediaItems() {
         groupColors[group.name] = group.color;
     });
 
-    const groupPositions = {};
-    mediaItems.forEach((item, index) => {
-        if (item.group) {
-            if (!groupPositions[item.group]) groupPositions[item.group] = { start: index, end: index };
-            else groupPositions[item.group].end = index;
-        }
-    });
-
     mediaItems.forEach((mediaItem, index) => {
         const item = document.createElement('div');
         item.className = 'media-item';
         item.dataset.index = index;
         item.dataset.group = mediaItem.group || '';
-        if (mediaItem.group) {
-            item.classList.add('grouped');
-            item.style.borderLeftColor = groupColors[mediaItem.group] || '#ddd';
-            const groupInfo = groupPositions[mediaItem.group];
-            if (index === groupInfo.start) item.classList.add('grouped-first');
-            else if (index === groupInfo.end) item.classList.add('grouped-last');
-            else item.classList.add('grouped-middle');
-        }
 
-        const dragIcon = document.createElement('span');
-        dragIcon.className = 'drag-icon';
-        dragIcon.innerHTML = '⋮⋮';
-        item.appendChild(dragIcon);
+        const previewWrapper = document.createElement('div');
+        previewWrapper.className = 'preview-wrapper';
 
         const number = document.createElement('span');
         number.className = 'media-number';
-        number.textContent = `${index + 1}.`;
-        item.appendChild(number);
+        number.textContent = `${index + 1}`;
+        previewWrapper.appendChild(number);
 
         const preview = document.createElement('div');
         preview.className = 'preview';
@@ -328,7 +237,17 @@ function displayMediaItems() {
             preview.appendChild(video);
         }
         item.dataset.url = url;
-        item.appendChild(preview);
+        previewWrapper.appendChild(preview);
+
+        if (mediaItem.group) {
+            const groupLabel = document.createElement('span');
+            groupLabel.className = 'group-label';
+            groupLabel.textContent = mediaItem.group;
+            groupLabel.style.backgroundColor = groupColors[mediaItem.group] || '#ddd';
+            previewWrapper.appendChild(groupLabel);
+        }
+
+        item.appendChild(previewWrapper);
 
         const descriptionDiv = document.createElement('div');
         descriptionDiv.className = 'description';
@@ -360,7 +279,6 @@ function displayMediaItems() {
             mediaItem.group = e.target.value;
             regroupMediaItems();
             displayMediaItems();
-            updateThumbnailQueueDebounced();
         });
         item.appendChild(groupSelect);
 
@@ -372,7 +290,6 @@ function displayMediaItems() {
             mediaItems.splice(index, 1);
             regroupMediaItems();
             displayMediaItems();
-            updateThumbnailQueueDebounced();
         });
         item.appendChild(removeBtn);
 
@@ -384,6 +301,7 @@ function displayMediaItems() {
         ghostClass: 'sortable-ghost',
         chosenClass: 'sortable-chosen',
         group: 'media',
+        direction: 'horizontal',
         onStart: (evt) => {
             const draggedItem = mediaItems[evt.oldIndex];
             if (draggedItem.group) {
@@ -448,7 +366,6 @@ function displayMediaItems() {
 
             regroupMediaItems();
             displayMediaItems();
-            updateThumbnailQueueDebounced();
         }
     });
 }
@@ -631,7 +548,6 @@ releaseModal.addEventListener('click', (e) => {
 });
 
 // Groups Manager Modal
-const groupsManagerModal = document.getElementById('groupsManagerModal');
 const groupsClose = document.getElementById('groupsClose');
 const addGroupBtn = document.getElementById('addGroupBtn');
 const groupsList = document.getElementById('groupsList');
@@ -660,7 +576,6 @@ function updateGroupsList() {
                 group.color = color;
                 updateGroupsList();
                 displayMediaItems();
-                updateThumbnailQueueDebounced();
                 colorSwatchPopup.style.display = 'none';
             });
             colorSwatchPopup.appendChild(swatch);
@@ -686,7 +601,6 @@ function updateGroupsList() {
                 });
                 updateGroupsList();
                 displayMediaItems();
-                updateThumbnailQueueDebounced();
             } else if (newName !== group.name) {
                 nameSpan.textContent = group.name;
                 alert('Group name must be unique and non-empty.');
@@ -709,7 +623,6 @@ function updateGroupsList() {
             updateGroupsList();
             regroupMediaItems();
             displayMediaItems();
-            updateThumbnailQueueDebounced();
         });
 
         groupItem.appendChild(colorBox);
@@ -747,14 +660,12 @@ addGroupBtn.addEventListener('click', () => {
         updateGroupsList();
         regroupMediaItems();
         displayMediaItems();
-        updateThumbnailQueueDebounced();
     } else {
         alert('Please enter a unique group name and select a color.');
     }
 });
 
 displayMediaItems();
-updateThumbnailQueue();
 
 // Form Submission with Download or Email Option
 form.addEventListener('submit', (e) => {
