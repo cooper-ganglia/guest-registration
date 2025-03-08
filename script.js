@@ -264,8 +264,7 @@ function displayMediaItems() {
         descriptionDiv.className = 'description';
         const descLabel = document.createElement('label');
         descLabel.textContent = 'Description *';
-        const descInput = document.createElement('input');
-        descInput.type = 'text';
+        const descInput = document.createElement('textarea');
         descInput.value = mediaItem.description || '';
         descInput.required = true;
         descInput.addEventListener('input', (e) => {
