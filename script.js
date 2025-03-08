@@ -3,6 +3,7 @@ const fileInput = document.getElementById('fileInput');
 const mediaQueue = document.getElementById('mediaQueue');
 const thumbnailQueue = document.getElementById('thumbnailQueue');
 const addGraphicsBtn = document.getElementById('addGraphicsBtn');
+const uploadArea = document.getElementById('uploadArea');
 let mediaItems = [];
 let guestIndex = 0;
 let signatures = {};
@@ -151,7 +152,35 @@ function openGroupsModal() {
 openGroupsManagerGraphics.addEventListener('click', openGroupsModal);
 openGroupsManagerModal.addEventListener('click', openGroupsModal);
 
-// Media Upload and Display
+// Drag and Drop for Media Upload
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.style.backgroundColor = '#e5e5ea';
+});
+
+uploadArea.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    uploadArea.style.backgroundColor = '#fff';
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.style.backgroundColor = '#fff';
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+        file.type.startsWith('image/') || file.type.startsWith('video/')
+    );
+    if (mediaItems.length + files.length > 20) {
+        alert('Maximum of 20 items allowed.');
+        return;
+    }
+    const newMediaItems = files.map(file => ({ file, group: '', description: '' }));
+    mediaItems = mediaItems.concat(newMediaItems);
+    regroupMediaItems();
+    displayMediaItems();
+    updateThumbnailQueueDebounced();
+});
+
+// File Input Upload
 fileInput.addEventListener('change', (e) => {
     const newFiles = Array.from(e.target.files);
     if (mediaItems.length + newFiles.length > 20) {
@@ -718,7 +747,7 @@ addGroupBtn.addEventListener('click', () => {
 displayMediaItems();
 updateThumbnailQueue();
 
-// Form Submission with Download Option
+// Form Submission with Download or Email Option
 form.addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -801,132 +830,169 @@ form.addEventListener('submit', (e) => {
 
     console.log('Form data ready to submit:', formData);
 
+    // Hide floating button after submission
+    floatingAddGraphics.style.display = 'none';
+
     const thankYouOverlay = document.getElementById('thankYouOverlay');
     thankYouOverlay.style.display = 'flex';
 
-    const downloadFormsBtn = document.getElementById('downloadFormsBtn');
-    downloadFormsBtn.onclick = () => {
+    // Generate ZIP file once and reuse
+    const generateZip = () => {
         const zip = new JSZip();
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Load the logo
         const logoImg = new Image();
         logoImg.src = './3abn.png';
-        logoImg.onload = () => {
-            // Calculate aspect ratio and maintain it
-            const logoWidth = 50; // Desired width
-            const aspectRatio = logoImg.height / logoImg.width;
-            const logoHeight = logoWidth * aspectRatio;
-            doc.addImage(logoImg, 'PNG', 10, 10, logoWidth, logoHeight);
+        return new Promise((resolve) => {
+            logoImg.onload = () => {
+                const logoWidth = 50;
+                const aspectRatio = logoImg.height / logoImg.width;
+                const logoHeight = logoWidth * aspectRatio;
+                doc.addImage(logoImg, 'PNG', 10, 10, logoWidth, logoHeight);
 
-            // Title
-            doc.setFontSize(20);
-            doc.setFont('helvetica', 'bold');
-            doc.text('3ABN Guest Registration Form', 70, 25);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('3ABN Guest Registration Form', 70, 25);
 
-            // Public Ministry Information
-            let y = 40;
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Public Ministry Information', 10, y);
-            y += 5;
-            doc.setLineWidth(0.5);
-            doc.line(10, y, 200, y);
-            y += 10;
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Program: ${programValue}`, 10, y); y += 7;
-            doc.text(`Ministry Name: ${document.getElementById('ministryName').value}`, 10, y); y += 7;
-            doc.text(`Ministry Address: ${document.getElementById('ministryAddress').value || ''}`, 10, y); y += 7;
-            doc.text(`Ministry Website: ${document.getElementById('ministryWebsite').value || ''}`, 10, y); y += 7;
-            doc.text(`Email: ${document.getElementById('email').value || ''}`, 10, y); y += 7;
-            doc.text(`Phone: ${document.getElementById('phone').value || ''}`, 10, y); y += 10;
+                let y = 40;
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Public Ministry Information', 10, y);
+                y += 5;
+                doc.setLineWidth(0.5);
+                doc.line(10, y, 200, y);
+                y += 10;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Program: ${programValue}`, 10, y); y += 7;
+                doc.text(`Ministry Name: ${document.getElementById('ministryName').value}`, 10, y); y += 7;
+                doc.text(`Ministry Address: ${document.getElementById('ministryAddress').value || ''}`, 10, y); y += 7;
+                doc.text(`Ministry Website: ${document.getElementById('ministryWebsite').value || ''}`, 10, y); y += 7;
+                doc.text(`Email: ${document.getElementById('email').value || ''}`, 10, y); y += 7;
+                doc.text(`Phone: ${document.getElementById('phone').value || ''}`, 10, y); y += 10;
 
-            // Private Guest Information
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Private Guest Information', 10, y);
-            y += 5;
-            doc.line(10, y, 200, y);
-            y += 10;
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Name: ${document.getElementById('name').value || ''}`, 10, y); y += 7;
-            doc.text(`Position: ${document.getElementById('position').value}`, 10, y); y += 7;
-            doc.text(`Home Address: ${document.getElementById('homeAddress').value || ''}`, 10, y); y += 7;
-            doc.text(`Recording Date: ${recordingDate}`, 10, y); y += 10;
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Private Guest Information', 10, y);
+                y += 5;
+                doc.line(10, y, 200, y);
+                y += 10;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Name: ${document.getElementById('name').value || ''}`, 10, y); y += 7;
+                doc.text(`Position: ${document.getElementById('position').value}`, 10, y); y += 7;
+                doc.text(`Home Address: ${document.getElementById('homeAddress').value || ''}`, 10, y); y += 7;
+                doc.text(`Recording Date: ${recordingDate}`, 10, y); y += 10;
 
-            // Additional Guests
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Additional Guests', 10, y);
-            y += 5;
-            doc.line(10, y, 200, y);
-            y += 10;
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            additionalGuests.forEach((guest, idx) => {
-                doc.text(`Guest ${idx + 1}:`, 10, y); y += 7;
-                doc.text(`  Name: ${guest.name || ''}`, 10, y); y += 7;
-                doc.text(`  Title: ${guest.title || ''}`, 10, y); y += 7;
-            });
-            y += 5;
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Additional Guests', 10, y);
+                y += 5;
+                doc.line(10, y, 200, y);
+                y += 10;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                additionalGuests.forEach((guest, idx) => {
+                    doc.text(`Guest ${idx + 1}:`, 10, y); y += 7;
+                    doc.text(`  Name: ${guest.name || ''}`, 10, y); y += 7;
+                    doc.text(`  Title: ${guest.title || ''}`, 10, y); y += 7;
+                });
+                y += 5;
 
-            // Graphics
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Graphics', 10, y);
-            y += 5;
-            doc.line(10, y, 200, y);
-            y += 10;
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            mediaItems.forEach((item, idx) => {
-                if (y > 270) { // Check for page overflow
-                    doc.addPage();
-                    y = 10;
-                }
-                doc.text(`Item ${idx + 1}: ${item.file.name}`, 10, y); y += 7;
-                const descLines = doc.splitTextToSize(`  Description: ${item.description || ''}`, 180);
-                doc.text(descLines, 10, y); y += descLines.length * 7;
-            });
-            y += 5;
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Graphics', 10, y);
+                y += 5;
+                doc.line(10, y, 200, y);
+                y += 10;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                mediaItems.forEach((item, idx) => {
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 10;
+                    }
+                    doc.text(`Item ${idx + 1}: ${item.file.name}`, 10, y); y += 7;
+                    const descLines = doc.splitTextToSize(`  Description: ${item.description || ''}`, 180);
+                    doc.text(descLines, 10, y); y += descLines.length * 7;
+                });
+                y += 5;
 
-            // Program Details
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Program Details', 10, y);
-            y += 5;
-            doc.line(10, y, 200, y);
-            y += 10;
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Suggested Title: ${document.getElementById('suggestedTitle').value || ''}`, 10, y); y += 7;
-            const outlineLines = doc.splitTextToSize(`Outline: ${document.getElementById('outline').value}`, 180);
-            doc.text(outlineLines, 10, y); y += outlineLines.length * 7;
-            const questionsLines = doc.splitTextToSize(`Suggested Questions: ${document.getElementById('suggestedQuestions').value}`, 180);
-            doc.text(questionsLines, 10, y); y += questionsLines.length * 7;
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Program Details', 10, y);
+                y += 5;
+                doc.line(10, y, 200, y);
+                y += 10;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Suggested Title: ${document.getElementById('suggestedTitle').value || ''}`, 10, y); y += 7;
+                const outlineLines = doc.splitTextToSize(`Outline: ${document.getElementById('outline').value}`, 180);
+                doc.text(outlineLines, 10, y); y += outlineLines.length * 7;
+                const questionsLines = doc.splitTextToSize(`Suggested Questions: ${document.getElementById('suggestedQuestions').value}`, 180);
+                doc.text(questionsLines, 10, y); y += questionsLines.length * 7;
 
-            // Add PDF to ZIP
-            const pdfBlob = doc.output('blob');
-            zip.file("registration_form.pdf", pdfBlob);
+                zip.file("registration_form.pdf", doc.output('blob'));
 
-            // Add release forms
-            Object.keys(signatures).forEach((key) => {
-                const signature = signatures[key];
-                const fileName = key === 'main' ? 'main_release_form.png' : 
-                                key === 'mainGuardian' ? 'guardian_release_form.png' : 
-                                `additional_guest_${key}_release_form.png`;
-                const base64Data = signature.data.split(',')[1];
-                zip.file(fileName, base64Data, { base64: true });
-            });
+                Object.keys(signatures).forEach((key) => {
+                    const signature = signatures[key];
+                    const fileName = key === 'main' ? 'main_release_form.png' : 
+                                    key === 'mainGuardian' ? 'guardian_release_form.png' : 
+                                    `additional_guest_${key}_release_form.png`;
+                    const base64Data = signature.data.split(',')[1];
+                    zip.file(fileName, base64Data, { base64: true });
+                });
 
-            // Generate and download ZIP
+                resolve(zip);
+            };
+        });
+    };
+
+    const downloadFormsBtn = document.getElementById('downloadFormsBtn');
+    downloadFormsBtn.onclick = () => {
+        generateZip().then(zip => {
             zip.generateAsync({ type: "blob" }).then((content) => {
                 saveAs(content, "3abn_registration_forms.zip");
                 thankYouOverlay.style.display = 'none';
             });
-        };
+        });
+    };
+
+    const emailFormsBtn = document.getElementById('emailFormsBtn');
+    emailFormsBtn.onclick = () => {
+        const email = document.getElementById('emailFormsInput').value.trim();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            alert('Please enter a valid email address.');
+            return;
+        }
+
+        generateZip().then(zip => {
+            zip.generateAsync({ type: "blob" }).then((content) => {
+                // Simulate email sending (client-side placeholder)
+                console.log(`Simulating email of ZIP file to ${email}`);
+                alert(`Forms would be emailed to ${email}. (This is a simulation—actual emailing requires server-side setup.)`);
+
+                // For actual email, you'd need a server endpoint, e.g.:
+                /*
+                const emailFormData = new FormData();
+                emailFormData.append('email', email);
+                emailFormData.append('file', content, '3abn_registration_forms.zip');
+                fetch('/send-email', {
+                    method: 'POST',
+                    body: emailFormData
+                }).then(response => {
+                    if (response.ok) {
+                        alert(`Forms emailed to ${email}`);
+                        thankYouOverlay.style.display = 'none';
+                    } else {
+                        alert('Failed to send email.');
+                    }
+                });
+                */
+
+                thankYouOverlay.style.display = 'none';
+            });
+        });
     };
 });
