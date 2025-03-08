@@ -67,6 +67,12 @@ h1 {
     top: 20px;
 }
 
+.sticky-drop {
+    position: sticky;
+    top: 180px; /* Adjusted to appear below the graphics section header */
+    z-index: 10;
+}
+
 h2 {
     font-size: 24px;
     font-weight: 600;
@@ -311,16 +317,16 @@ button {
     color: #6e6e73;
 }
 
-.description input {
+.description textarea {
     width: 100%;
     font-size: 14px;
     padding: 10px;
-    height: 60px;
+    height: 60px; /* Adjusted for two lines */
     border-radius: 6px;
     resize: vertical;
 }
 
-.description input:required:invalid {
+.description textarea:required:invalid {
     border-color: #ff0000;
 }
 
@@ -721,6 +727,9 @@ input[type="checkbox"]:checked::after {
         height: 36px;
     }
     .media-item {
-        width: 100%; /* Full width on small screens */
+        width: 100%;
+    }
+    .sticky-drop {
+        top: 100px; /* Adjust for smaller screens */
     }
 }
