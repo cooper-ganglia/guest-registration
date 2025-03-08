@@ -141,8 +141,12 @@
         <div id="thankYouOverlay" class="overlay" style="display:none;">
             <div class="overlay-content">
                 <h2>Thank You for Registering!</h2>
-                <p>Download your completed registration and release forms below.</p>
+                <p>Choose how you'd like to receive your completed registration and release forms:</p>
                 <button id="downloadFormsBtn" class="submit-btn">Download Forms</button>
+                <div class="email-option">
+                    <input type="email" id="emailFormsInput" placeholder="Enter email address">
+                    <button id="emailFormsBtn" class="submit-btn">Email Forms</button>
+                </div>
             </div>
         </div>
     </main>
@@ -238,9 +242,9 @@
             <span class="close" id="graphicsClose">×</span>
             <h2>Graphics Manager</h2>
             <div class="graphics-content">
-                <div class="upload-area">
+                <div class="upload-area" id="uploadArea">
                     <input type="file" id="fileInput" multiple accept="image/*,video/*">
-                    <label for="fileInput" class="upload-label">Click to Upload</label>
+                    <label for="fileInput" class="upload-label">Click to Upload or Drag & Drop</label>
                 </div>
                 <div id="mediaQueue"></div>
                 <button type="button" id="openGroupsManagerModal" class="group-manager-btn">Manage Groups</button>
