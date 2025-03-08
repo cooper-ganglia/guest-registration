@@ -243,8 +243,8 @@ function displayMediaItems() {
             const groupLabel = document.createElement('span');
             groupLabel.className = 'group-label';
             groupLabel.textContent = mediaItem.group;
-            groupLabel.style.backgroundColor = groupColors[mediaItem.group] || '#ddd';
             previewWrapper.appendChild(groupLabel);
+            item.style.borderColor = groupColors[mediaItem.group] || '#ddd'; // Set frame color
         }
 
         item.appendChild(previewWrapper);
@@ -284,7 +284,7 @@ function displayMediaItems() {
 
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove';
-        removeBtn.textContent = 'Remove';
+        removeBtn.textContent = '×'; // Changed to X
         removeBtn.addEventListener('click', () => {
             if (item.dataset.url) URL.revokeObjectURL(item.dataset.url);
             mediaItems.splice(index, 1);
@@ -300,8 +300,6 @@ function displayMediaItems() {
         animation: 300,
         ghostClass: 'sortable-ghost',
         chosenClass: 'sortable-chosen',
-        group: 'media',
-        direction: 'horizontal',
         onStart: (evt) => {
             const draggedItem = mediaItems[evt.oldIndex];
             if (draggedItem.group) {
