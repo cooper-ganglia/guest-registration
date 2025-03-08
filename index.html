@@ -135,7 +135,11 @@
                     <button type="button" id="openGroupsManagerGraphics" class="group-manager-btn">Manage Groups</button>
                 </section>
                 <div class="drop-zone" id="mainDropZone">
+                    <img src="upload-icon.png" alt="Upload Icon" class="upload-icon">
                     <p>Drag & Drop Images or Videos Here</p>
+                    <p>or</p>
+                    <label for="mainFileInput" class="upload-label">Browse Files</label>
+                    <input type="file" id="mainFileInput" multiple accept="image/*,video/*">
                 </div>
             </div>
 
@@ -245,10 +249,12 @@
             <span class="close" id="graphicsClose">×</span>
             <h2>Graphics Manager</h2>
             <div class="graphics-content">
-                <div class="drop-zone" id="modalUploadArea">
-                    <input type="file" id="fileInput" multiple accept="image/*,video/*">
-                    <label for="fileInput" class="upload-label">Click to Upload</label>
-                    <p>or Drag & Drop Images or Videos Here</p>
+                <div class="drop-zone" id="modalDropZone">
+                    <img src="upload-icon.png" alt="Upload Icon" class="upload-icon">
+                    <p>Drag & Drop Images or Videos Here</p>
+                    <p>or</p>
+                    <label for="modalFileInput" class="upload-label">Browse Files</label>
+                    <input type="file" id="modalFileInput" multiple accept="image/*,video/*">
                 </div>
                 <div id="mediaQueue"></div>
                 <button type="button" id="openGroupsManagerModal" class="group-manager-btn">Manage Groups</button>
