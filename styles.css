@@ -206,17 +206,27 @@ button {
     background: #005bb5;
 }
 
-#mainFileInput, #modalFileInput {
+#mainFileInput {
     display: none;
+}
+
+.media-queue {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 15px;
+    margin-top: 10px;
+    padding-bottom: 10px;
 }
 
 .media-item {
     display: flex;
+    flex-direction: column;
     align-items: center;
     background: #fafafa;
     border-radius: 10px;
     padding: 10px;
-    margin-bottom: 10px;
+    min-width: 160px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s ease;
     cursor: move;
@@ -232,64 +242,57 @@ button {
     opacity: 0.4;
 }
 
-.grouped {
-    border-left: 4px solid;
-}
-
-.grouped-first {
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    border-top: 1px solid #d2d2d7;
-}
-
-.grouped-last {
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-    border-bottom: 1px solid #d2d2d7;
-    margin-bottom: 15px;
-}
-
-.grouped-middle {
-    border-radius: 0;
-    margin-bottom: 0;
-    border-top: none;
-    border-bottom: none;
+.preview-wrapper {
+    position: relative;
+    margin-bottom: 10px;
 }
 
 .media-number {
+    position: absolute;
+    top: 5px;
+    left: 5px;
     font-weight: 600;
-    margin-right: 10px;
     color: #0071e3;
-}
-
-.drag-icon {
-    margin-right: 10px;
-    font-size: 16px;
-    color: #6e6e73;
-    cursor: move;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 12px;
 }
 
 .preview {
-    margin-right: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .preview img,
 .preview video {
-    max-width: 80px;
-    max-height: 80px;
+    max-width: 120px;
+    max-height: 120px;
     border-radius: 4px;
 }
 
+.group-label {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    padding: 2px 6px;
+    color: #fff;
+    font-size: 12px;
+    border-radius: 4px;
+    opacity: 0.9;
+}
+
 .description {
-    flex-grow: 1;
-    margin-right: 15px;
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 .description input {
     width: 100%;
     font-size: 14px;
-    padding: 12px;
-    height: 40px;
+    padding: 8px;
+    height: 36px;
 }
 
 .description input:required:invalid {
@@ -297,13 +300,14 @@ button {
 }
 
 .group-select {
-    max-width: 120px;
-    padding: 10px;
+    width: 100%;
+    padding: 8px;
     font-size: 14px;
     border-radius: 6px;
     background: #fafafa;
     border: 1px solid #d2d2d7;
     cursor: pointer;
+    margin-bottom: 10px;
 }
 
 .group-select option {
@@ -313,6 +317,7 @@ button {
 .remove {
     background: #ff2d55;
     color: #fff;
+    width: 100%;
 }
 
 .submit-btn {
@@ -365,47 +370,6 @@ button {
 .floating-add-graphics.hidden {
     opacity: 0;
     pointer-events: none;
-}
-
-/* Thumbnail Queue Styles */
-.thumbnail-queue {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.thumbnail-item {
-    width: 80px;
-    height: 80px;
-    border-radius: 6px;
-    overflow: hidden;
-    cursor: pointer;
-    position: relative;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.thumbnail-item img,
-.thumbnail-item video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.thumbnail-item::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.thumbnail-item:hover::after {
-    opacity: 1;
 }
 
 /* Modal Styles */
@@ -495,21 +459,6 @@ canvas {
     font-size: 24px;
     cursor: pointer;
     z-index: 1001;
-}
-
-/* Graphics Modal Styles */
-#graphicsModal .modal-content {
-    max-width: 800px;
-    height: 80vh;
-    overflow-y: auto;
-}
-
-.graphics-content {
-    width: 100%;
-}
-
-#graphicsModal .drop-zone {
-    margin-bottom: 20px;
 }
 
 /* Groups Manager Modal Styles */
@@ -735,19 +684,6 @@ input[type="checkbox"]:checked::after {
     .input-fields {
         width: 100%;
     }
-    #graphicsModal .modal-content {
-        width: 90%;
-        height: 80vh;
-    }
-    .email-option {
-        flex-direction: column;
-    }
-    .email-option input[type="email"] {
-        width: 100%;
-    }
-    .email-option .submit-btn {
-        width: 100%;
-    }
     .drop-zone {
         padding: 20px;
     }
@@ -757,5 +693,16 @@ input[type="checkbox"]:checked::after {
     .drop-zone .upload-icon {
         width: 36px;
         height: 36px;
+    }
+    .media-queue {
+        flex-wrap: wrap;
+    }
+    .media-item {
+        min-width: 140px;
+    }
+    .preview img,
+    .preview video {
+        max-width: 100px;
+        max-height: 100px;
     }
 }
