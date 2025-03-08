@@ -1,10 +1,11 @@
 const form = document.getElementById('registrationForm');
-const fileInput = document.getElementById('fileInput');
+const mainFileInput = document.getElementById('mainFileInput');
+const modalFileInput = document.getElementById('modalFileInput');
 const mediaQueue = document.getElementById('mediaQueue');
 const thumbnailQueue = document.getElementById('thumbnailQueue');
 const addGraphicsBtn = document.getElementById('addGraphicsBtn');
 const mainDropZone = document.getElementById('mainDropZone');
-const modalUploadArea = document.getElementById('modalUploadArea');
+const modalDropZone = document.getElementById('modalDropZone');
 let mediaItems = [];
 let guestIndex = 0;
 let signatures = {};
@@ -154,51 +155,53 @@ openGroupsManagerGraphics.addEventListener('click', openGroupsModal);
 openGroupsManagerModal.addEventListener('click', openGroupsModal);
 
 // Drag and Drop Handlers
-function setupDragAndDrop(element) {
-    element.addEventListener('dragover', (e) => {
+function setupDragAndDrop(dropZone, fileInput) {
+    dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        element.classList.add('dragover');
+        dropZone.classList.add('dragover');
     });
 
-    element.addEventListener('dragleave', (e) => {
+    dropZone.addEventListener('dragleave', (e) => {
         e.preventDefault();
-        element.classList.remove('dragover');
+        dropZone.classList.remove('dragover');
     });
 
-    element.addEventListener('drop', (e) => {
+    dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
-        element.classList.remove('dragover');
+        dropZone.classList.remove('dragover');
         const files = Array.from(e.dataTransfer.files).filter(file => 
             file.type.startsWith('image/') || file.type.startsWith('video/')
         );
-        if (mediaItems.length + files.length > 20) {
-            alert('Maximum of 20 items allowed.');
-            return;
-        }
-        const newMediaItems = files.map(file => ({ file, group: '', description: '' }));
-        mediaItems = mediaItems.concat(newMediaItems);
-        regroupMediaItems();
-        displayMediaItems();
-        updateThumbnailQueueDebounced();
+        handleFiles(files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(Array.from(e.target.files));
+        fileInput.value = ''; // Reset input for repeated uploads
     });
 }
 
-setupDragAndDrop(mainDropZone);
-setupDragAndDrop(modalUploadArea);
-
-// File Input Upload
-fileInput.addEventListener('change', (e) => {
-    const newFiles = Array.from(e.target.files);
-    if (mediaItems.length + newFiles.length > 20) {
+function handleFiles(files) {
+    if (mediaItems.length + files.length > 20) {
         alert('Maximum of 20 items allowed.');
         return;
     }
-    const newMediaItems = newFiles.map(file => ({ file, group: '', description: '' }));
+    const validFiles = files.filter(file => 
+        file.type.startsWith('image/') || file.type.startsWith('video/')
+    );
+    if (validFiles.length === 0) {
+        alert('Please upload only images or videos.');
+        return;
+    }
+    const newMediaItems = validFiles.map(file => ({ file, group: '', description: '' }));
     mediaItems = mediaItems.concat(newMediaItems);
     regroupMediaItems();
     displayMediaItems();
     updateThumbnailQueueDebounced();
-});
+}
+
+setupDragAndDrop(mainDropZone, mainFileInput);
+setupDragAndDrop(modalDropZone, modalFileInput);
 
 // Debounce function
 function debounce(func, wait) {
