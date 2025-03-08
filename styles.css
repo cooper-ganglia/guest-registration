@@ -161,14 +161,28 @@ button {
     color: #fff;
 }
 
-.upload-area {
-    border: 2px dashed #d2d2d7;
-    padding: 20px;
-    text-align: center;
-    margin-bottom: 15px;
-    border-radius: 8px;
+.drop-zone {
     background: #fff;
-    transition: background-color 0.2s ease;
+    border: 2px dashed #d2d2d7;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.drop-zone p {
+    font-size: 16px;
+    color: #6e6e73;
+    margin: 10px 0;
+}
+
+.drop-zone.dragover {
+    background: #e5f0ff;
+    border-color: #0071e3;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.2);
 }
 
 .upload-label {
@@ -178,6 +192,11 @@ button {
     border-radius: 6px;
     cursor: pointer;
     display: inline-block;
+    transition: background 0.2s ease;
+}
+
+.upload-label:hover {
+    background: #005bb5;
 }
 
 #fileInput {
@@ -482,7 +501,7 @@ canvas {
     width: 100%;
 }
 
-#graphicsModal .upload-area {
+#graphicsModal .drop-zone {
     margin-bottom: 20px;
 }
 
@@ -721,5 +740,11 @@ input[type="checkbox"]:checked::after {
     }
     .email-option .submit-btn {
         width: 100%;
+    }
+    .drop-zone {
+        padding: 20px;
+    }
+    .drop-zone p {
+        font-size: 14px;
     }
 }
