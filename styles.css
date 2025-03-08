@@ -44,6 +44,12 @@ h1 {
     margin: 0 auto;
 }
 
+@media (min-width: 901px) {
+    .grid-container {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 .form-column, .graphics-column {
     min-width: 0;
 }
@@ -211,10 +217,9 @@ button {
 }
 
 .media-queue {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
-    margin-top: 15px;
     padding: 15px;
     background: #f9f9fb;
     border-radius: 12px;
@@ -227,16 +232,10 @@ button {
     background: #fff;
     border-radius: 10px;
     padding: 15px;
-    width: 200px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     position: relative;
     transition: transform 0.2s ease;
     cursor: move;
-    border: 3px solid transparent;
-}
-
-.media-item[data-group]:not([data-group=""]) {
-    border: 3px solid;
 }
 
 .media-item.sortable-chosen {
@@ -271,10 +270,9 @@ button {
 }
 
 .preview {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    position: relative;
     width: 100%;
+    border: 3px solid transparent;
 }
 
 .preview img,
@@ -285,15 +283,22 @@ button {
     object-fit: cover;
 }
 
-.group-label {
+.remove {
     position: absolute;
-    bottom: 5px;
-    left: 5px;
-    padding: 3px 8px;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    background: #ff2d55;
     color: #fff;
-    font-size: 13px;
-    border-radius: 4px;
-    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    font-size: 16px;
+    line-height: 24px;
+    text-align: center;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    z-index: 10;
 }
 
 .description {
@@ -332,21 +337,6 @@ button {
 
 .group-select option {
     padding: 10px;
-}
-
-.remove {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 24px;
-    height: 24px;
-    background: #ff2d55;
-    color: #fff;
-    border-radius: 50%;
-    font-size: 16px;
-    line-height: 24px;
-    text-align: center;
-    padding: 0;
 }
 
 #graphicsSection::after {
@@ -705,9 +695,6 @@ input[type="checkbox"]:checked::after {
 }
 
 @media (max-width: 900px) {
-    .grid-container {
-        grid-template-columns: 1fr;
-    }
     .release-form-layout {
         flex-direction: column;
         align-items: center;
@@ -716,7 +703,7 @@ input[type="checkbox"]:checked::after {
         width: 100%;
         height: auto;
     }
-    .canvas {
+    canvas {
         width: 100%;
         height: auto;
     }
@@ -734,10 +721,6 @@ input[type="checkbox"]:checked::after {
         height: 36px;
     }
     .media-item {
-        width: 160px;
-    }
-    .preview img,
-    .preview video {
-        max-height: 120px;
+        width: 100%; /* Full width on small screens */
     }
 }
