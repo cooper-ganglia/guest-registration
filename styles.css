@@ -167,6 +167,8 @@ button {
     text-align: center;
     margin-bottom: 15px;
     border-radius: 8px;
+    background: #fff;
+    transition: background-color 0.2s ease;
 }
 
 .upload-label {
@@ -666,6 +668,26 @@ input[type="checkbox"]:checked::after {
 .overlay-content p {
     font-size: 16px;
     color: #6e6e73;
+    margin-bottom: 20px;
+}
+
+.email-option {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.email-option input[type="email"] {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #d2d2d7;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.email-option .submit-btn {
+    padding: 10px 20px;
 }
 
 @media (max-width: 900px) {
@@ -690,5 +712,14 @@ input[type="checkbox"]:checked::after {
     #graphicsModal .modal-content {
         width: 90%;
         height: 80vh;
+    }
+    .email-option {
+        flex-direction: column;
+    }
+    .email-option input[type="email"] {
+        width: 100%;
+    }
+    .email-option .submit-btn {
+        width: 100%;
     }
 }
