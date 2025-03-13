@@ -44,12 +44,6 @@ h1 {
     margin: 0 auto;
 }
 
-@media (min-width: 901px) {
-    .grid-container {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
 .form-column, .graphics-column {
     min-width: 0;
 }
@@ -65,12 +59,6 @@ h1 {
 .sticky {
     position: sticky;
     top: 20px;
-}
-
-.sticky-drop {
-    position: sticky;
-    top: 180px; /* Adjusted to appear below the graphics section header */
-    z-index: 10;
 }
 
 h2 {
@@ -218,141 +206,113 @@ button {
     background: #005bb5;
 }
 
-#mainFileInput {
+#mainFileInput, #modalFileInput {
     display: none;
-}
-
-.media-queue {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    padding: 15px;
-    background: #f9f9fb;
-    border-radius: 12px;
 }
 
 .media-item {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    background: #fff;
+    background: #fafafa;
     border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    position: relative;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s ease;
     cursor: move;
 }
 
 .media-item.sortable-chosen {
+    opacity: 0.8;
     transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-}
-
-.media-item.sortable-ghost {
-    opacity: 0.5;
     background: #e5e5ea;
 }
 
-.preview-wrapper {
-    position: relative;
-    width: 100%;
+.media-item.sortable-ghost {
+    opacity: 0.4;
+}
+
+.grouped {
+    border-left: 4px solid;
+}
+
+.grouped-first {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-top: 1px solid #d2d2d7;
+}
+
+.grouped-last {
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-bottom: 1px solid #d2d2d7;
     margin-bottom: 15px;
 }
 
+.grouped-middle {
+    border-radius: 0;
+    margin-bottom: 0;
+    border-top: none;
+    border-bottom: none;
+}
+
 .media-number {
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    font-weight: 700;
-    color: #fff;
-    background: #0071e3;
-    padding: 6px 10px;
-    border-radius: 50%;
+    font-weight: 600;
+    margin-right: 10px;
+    color: #0071e3;
+}
+
+.drag-icon {
+    margin-right: 10px;
     font-size: 16px;
-    z-index: 5;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    color: #6e6e73;
+    cursor: move;
 }
 
 .preview {
-    position: relative;
-    width: 100%;
-    border: 3px solid transparent;
+    margin-right: 15px;
 }
 
 .preview img,
 .preview video {
-    width: 100%;
-    max-height: 150px;
-    border-radius: 6px;
-    object-fit: cover;
-}
-
-.remove {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 24px;
-    height: 24px;
-    background: #ff2d55;
-    color: #fff;
-    border-radius: 50%;
-    font-size: 16px;
-    line-height: 24px;
-    text-align: center;
-    padding: 0;
-    border: none;
-    cursor: pointer;
-    z-index: 10;
+    max-width: 80px;
+    max-height: 80px;
+    border-radius: 4px;
 }
 
 .description {
-    width: 100%;
-    margin-bottom: 15px;
+    flex-grow: 1;
+    margin-right: 15px;
 }
 
-.description label {
-    font-size: 13px;
-    color: #6e6e73;
-}
-
-.description textarea {
+.description input {
     width: 100%;
     font-size: 14px;
-    padding: 10px;
-    height: 60px; /* Adjusted for two lines */
-    border-radius: 6px;
-    resize: vertical;
+    padding: 12px;
+    height: 40px;
 }
 
-.description textarea:required:invalid {
+.description input:required:invalid {
     border-color: #ff0000;
 }
 
 .group-select {
-    width: 100%;
-    padding: 8px;
+    max-width: 120px;
+    padding: 10px;
     font-size: 14px;
     border-radius: 6px;
     background: #fafafa;
     border: 1px solid #d2d2d7;
     cursor: pointer;
-    margin-bottom: 10px;
 }
 
 .group-select option {
     padding: 10px;
 }
 
-#graphicsSection::after {
-    content: "Drag items to reorder";
-    display: block;
-    text-align: center;
-    font-size: 14px;
-    color: #6e6e73;
-    margin-top: 15px;
-    font-style: italic;
+.remove {
+    background: #ff2d55;
+    color: #fff;
 }
 
 .submit-btn {
@@ -405,6 +365,47 @@ button {
 .floating-add-graphics.hidden {
     opacity: 0;
     pointer-events: none;
+}
+
+/* Thumbnail Queue Styles */
+.thumbnail-queue {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.thumbnail-item {
+    width: 80px;
+    height: 80px;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.thumbnail-item img,
+.thumbnail-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumbnail-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.thumbnail-item:hover::after {
+    opacity: 1;
 }
 
 /* Modal Styles */
@@ -494,6 +495,21 @@ canvas {
     font-size: 24px;
     cursor: pointer;
     z-index: 1001;
+}
+
+/* Graphics Modal Styles */
+#graphicsModal .modal-content {
+    max-width: 800px;
+    height: 80vh;
+    overflow-y: auto;
+}
+
+.graphics-content {
+    width: 100%;
+}
+
+#graphicsModal .drop-zone {
+    margin-bottom: 20px;
 }
 
 /* Groups Manager Modal Styles */
@@ -676,60 +692,3 @@ input[type="checkbox"]:checked::after {
 }
 
 .overlay-content p {
-    font-size: 16px;
-    color: #6e6e73;
-    margin-bottom: 20px;
-}
-
-.email-option {
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.email-option input[type="email"] {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #d2d2d7;
-    border-radius: 6px;
-    font-size: 14px;
-}
-
-.email-option .submit-btn {
-    padding: 10px 20px;
-}
-
-@media (max-width: 900px) {
-    .release-form-layout {
-        flex-direction: column;
-        align-items: center;
-    }
-    .canvas-container {
-        width: 100%;
-        height: auto;
-    }
-    canvas {
-        width: 100%;
-        height: auto;
-    }
-    .input-fields {
-        width: 100%;
-    }
-    .drop-zone {
-        padding: 20px;
-    }
-    .drop-zone p {
-        font-size: 14px;
-    }
-    .drop-zone .upload-icon {
-        width: 36px;
-        height: 36px;
-    }
-    .media-item {
-        width: 100%;
-    }
-    .sticky-drop {
-        top: 100px; /* Adjust for smaller screens */
-    }
-}
