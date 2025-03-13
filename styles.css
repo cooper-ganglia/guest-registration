@@ -370,12 +370,12 @@ button {
     pointer-events: none;
 }
 
-/* Thumbnail Queue Styles */
-.thumbnail-queue {
+/* Media Section Styles */
+.media-queue {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 .thumbnail-item {
@@ -383,7 +383,7 @@ button {
     height: 80px;
     border-radius: 6px;
     overflow: hidden;
-    cursor: pointer;
+    cursor: grab;
     position: relative;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -409,6 +409,98 @@ button {
 
 .thumbnail-item:hover::after {
     opacity: 1;
+}
+
+/* Groups Management */
+.groups-management {
+    margin: 15px 0;
+    padding: 15px;
+    background: #f9f9fb;
+    border-radius: 8px;
+    border: 1px solid #e5e5ea;
+}
+
+.group-form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.color-selector-inline {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.groups-list-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.group-item-inline {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    background: #fff;
+    border-radius: 20px;
+    border: 1px solid #d2d2d7;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.group-item-inline .color-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.group-item-inline span {
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.group-item-inline button {
+    background: none;
+    border: none;
+    color: #ff2d55;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.media-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.media-counter {
+    font-size: 14px;
+    color: #6e6e73;
+    font-weight: 600;
+}
+
+.button-icon {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+/* Drag handles and indicators */
+.drag-icon {
+    cursor: grab;
+    margin-right: 10px;
+    font-size: 18px;
+    color: #6e6e73;
+    transform: rotate(90deg);
+}
+
+.media-item.dragging {
+    opacity: 0.5;
 }
 
 /* Modal Styles */
