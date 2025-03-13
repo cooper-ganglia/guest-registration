@@ -223,28 +223,100 @@ const updateThumbnailQueueDebounced = debounce(() => {
 // Display Thumbnails on Main Page
 function updateThumbnailQueue() {
     thumbnailQueue.innerHTML = '';
+    
+    // Group media items by their group
+    const groupedMedia = {};
     mediaItems.forEach((mediaItem, index) => {
-        const thumbnail = document.createElement('div');
-        thumbnail.className = 'thumbnail-item';
-        let url;
-        if (mediaItem.file.type.startsWith('image/')) {
-            const img = document.createElement('img');
-            url = URL.createObjectURL(mediaItem.file);
-            img.src = url;
-            thumbnail.appendChild(img);
-        } else if (mediaItem.file.type.startsWith('video/')) {
-            const video = document.createElement('video');
-            url = URL.createObjectURL(mediaItem.file);
-            video.src = url;
-            video.muted = true;
-            thumbnail.appendChild(video);
+        const groupName = mediaItem.group || 'ungrouped';
+        if (!groupedMedia[groupName]) {
+            groupedMedia[groupName] = [];
         }
-        thumbnail.dataset.url = url;
-        thumbnail.addEventListener('click', () => {
-            graphicsModal.style.display = 'flex';
-            displayMediaItems();
+        groupedMedia[groupName].push({mediaItem, index});
+    });
+    
+    // Create containers for each group with appropriate styling
+    Object.keys(groupedMedia).forEach(groupName => {
+        const items = groupedMedia[groupName];
+        
+        // Find the group color if this is a named group
+        let groupColor = null;
+        if (groupName !== 'ungrouped') {
+            const group = groups.find(g => g.name === groupName);
+            if (group) {
+                groupColor = group.color;
+            }
+        }
+        
+        // Create a container for each item
+        items.forEach((item, groupIndex) => {
+            const {mediaItem, index} = item;
+            
+            const thumbnailContainer = document.createElement('div');
+            thumbnailContainer.className = 'media-item';
+            if (groupName !== 'ungrouped') {
+                thumbnailContainer.classList.add('grouped');
+                thumbnailContainer.style.borderLeftColor = groupColor;
+                
+                // Add RGB variables for background color
+                const hexToRgb = (hex) => {
+                    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+                    hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
+                };
+                
+                if (groupColor) {
+                    thumbnailContainer.style.setProperty('--group-color-rgb', hexToRgb(groupColor));
+                }
+                
+                // Add first/middle/last classes for grouped items
+                if (groupIndex === 0) {
+                    thumbnailContainer.classList.add('grouped-first');
+                } else if (groupIndex === items.length - 1) {
+                    thumbnailContainer.classList.add('grouped-last');
+                } else {
+                    thumbnailContainer.classList.add('grouped-middle');
+                }
+            }
+            
+            // Create the main thumbnail
+            const thumbnail = document.createElement('div');
+            thumbnail.className = 'thumbnail-item';
+            let url;
+            if (mediaItem.file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                url = URL.createObjectURL(mediaItem.file);
+                img.src = url;
+                thumbnail.appendChild(img);
+            } else if (mediaItem.file.type.startsWith('video/')) {
+                const video = document.createElement('video');
+                url = URL.createObjectURL(mediaItem.file);
+                video.src = url;
+                video.muted = true;
+                thumbnail.appendChild(video);
+            }
+            thumbnail.dataset.url = url;
+            
+            // Add item number and description
+            const number = document.createElement('span');
+            number.className = 'media-number';
+            number.textContent = `${index + 1}.`;
+            
+            const description = document.createElement('div');
+            description.className = 'description';
+            description.textContent = mediaItem.description || '(No description)';
+            
+            thumbnailContainer.appendChild(number);
+            thumbnailContainer.appendChild(thumbnail);
+            thumbnailContainer.appendChild(description);
+            
+            thumbnailContainer.addEventListener('click', () => {
+                graphicsModal.style.display = 'flex';
+                displayMediaItems();
+            });
+            
+            thumbnailQueue.appendChild(thumbnailContainer);
         });
-        thumbnailQueue.appendChild(thumbnail);
     });
 }
 
