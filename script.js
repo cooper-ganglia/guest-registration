@@ -138,7 +138,7 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// Graphics Management - Direct on main page
+// Graphics Management
 // Add Graphics button now triggers file input directly
 addGraphicsBtn.addEventListener('click', () => {
     mainFileInput.click();
@@ -153,6 +153,39 @@ const initializeSortable = () => {
         dragClass: 'dragging',
         handle: '.drag-icon',
         group: 'media',
+        onStart: (evt) => {
+            const draggedItem = mediaItems[evt.oldIndex];
+            if (draggedItem.group) {
+                const groupItems = mediaItems.filter(item => item.group === draggedItem.group);
+                const groupIndexes = groupItems.map(item => mediaItems.indexOf(item));
+                groupIndexes.forEach(idx => {
+                    if (idx !== evt.oldIndex) {
+                        mediaQueue.children[idx].classList.add('sortable-chosen');
+                    }
+                });
+            }
+        },
+        onMove: (evt) => {
+            const fromIndex = evt.dragged.dataset.index;
+            const toIndex = evt.related ? parseInt(evt.related.dataset.index) : mediaItems.length - 1;
+            const draggedItem = mediaItems[fromIndex];
+            const targetItem = mediaItems[toIndex];
+            const draggedGroup = draggedItem.group || 'none';
+            const targetGroup = targetItem.group || 'none';
+
+            if (draggedGroup !== targetGroup) {
+                const groupItems = targetGroup !== 'none' ? mediaItems.filter(item => item.group === targetGroup) : [];
+                if (groupItems.length > 1) {
+                    const groupIndexes = groupItems.map(item => mediaItems.indexOf(item));
+                    const minIndex = Math.min(...groupIndexes);
+                    const maxIndex = Math.max(...groupIndexes);
+                    if (toIndex > minIndex && toIndex < maxIndex) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        },
         onEnd: (evt) => {
             const fromIndex = evt.oldIndex;
             const toIndex = evt.newIndex;
@@ -271,142 +304,132 @@ function updateMediaCounter() {
     }
 }
 
-// Display media items directly on main page
+// Display media items on the page
 function displayMediaItems() {
     mediaQueue.innerHTML = '';
     
-    // Group media items by their group
-    const groupedMedia = {};
+    const groupColors = {};
+    groups.forEach((group) => {
+        groupColors[group.name] = group.color;
+    });
+
+    const groupPositions = {};
+    mediaItems.forEach((item, index) => {
+        if (item.group) {
+            if (!groupPositions[item.group]) groupPositions[item.group] = { start: index, end: index };
+            else groupPositions[item.group].end = index;
+        }
+    });
+
     mediaItems.forEach((mediaItem, index) => {
-        const groupName = mediaItem.group || 'ungrouped';
-        if (!groupedMedia[groupName]) {
-            groupedMedia[groupName] = [];
-        }
-        groupedMedia[groupName].push({mediaItem, index});
-    });
-    
-    // Create containers for each group with appropriate styling
-    Object.keys(groupedMedia).forEach(groupName => {
-        const items = groupedMedia[groupName];
+        const item = document.createElement('div');
+        item.className = 'media-item';
+        item.dataset.index = index;
+        item.dataset.group = mediaItem.group || '';
         
-        // Find the group color if this is a named group
-        let groupColor = null;
-        if (groupName !== 'ungrouped') {
-            const group = groups.find(g => g.name === groupName);
-            if (group) {
-                groupColor = group.color;
+        // Apply group styling if item belongs to a group
+        if (mediaItem.group) {
+            item.classList.add('grouped');
+            item.style.borderLeftColor = groupColors[mediaItem.group] || '#ddd';
+            
+            // Add background color using RGB variables
+            if (groupColors[mediaItem.group]) {
+                const rgb = hexToRgb(groupColors[mediaItem.group]);
+                item.style.setProperty('--group-color-rgb', rgb);
             }
+            
+            // Add first/middle/last classes for grouped items
+            const groupInfo = groupPositions[mediaItem.group];
+            if (index === groupInfo.start) item.classList.add('grouped-first');
+            else if (index === groupInfo.end) item.classList.add('grouped-last');
+            else item.classList.add('grouped-middle');
         }
-        
-        // Create a container for each item
-        items.forEach((item, groupIndex) => {
-            const {mediaItem, index} = item;
-            
-            const mediaItemElement = document.createElement('div');
-            mediaItemElement.className = 'media-item';
-            mediaItemElement.dataset.index = index;
-            
-            if (groupName !== 'ungrouped') {
-                mediaItemElement.classList.add('grouped');
-                mediaItemElement.style.borderLeftColor = groupColor;
-                
-                if (groupColor) {
-                    mediaItemElement.style.setProperty('--group-color-rgb', hexToRgb(groupColor));
-                }
-                
-                // Add first/middle/last classes for grouped items
-                if (groupIndex === 0) {
-                    mediaItemElement.classList.add('grouped-first');
-                } else if (groupIndex === items.length - 1) {
-                    mediaItemElement.classList.add('grouped-last');
-                } else {
-                    mediaItemElement.classList.add('grouped-middle');
-                }
-            }
-            
-            // Add drag handle
-            const dragIcon = document.createElement('span');
-            dragIcon.className = 'drag-icon';
-            dragIcon.innerHTML = '⋮⋮';
-            dragIcon.title = 'Drag to reorder';
-            mediaItemElement.appendChild(dragIcon);
-            
-            // Add item number
-            const number = document.createElement('span');
-            number.className = 'media-number';
-            number.textContent = `${index + 1}.`;
-            mediaItemElement.appendChild(number);
-            
-            // Add preview thumbnail
-            const preview = document.createElement('div');
-            preview.className = 'preview';
-            let url;
-            if (mediaItem.file.type.startsWith('image/')) {
-                const img = document.createElement('img');
-                url = URL.createObjectURL(mediaItem.file);
-                img.src = url;
-                preview.appendChild(img);
-            } else if (mediaItem.file.type.startsWith('video/')) {
-                const video = document.createElement('video');
-                url = URL.createObjectURL(mediaItem.file);
-                video.src = url;
-                video.controls = true;
-                preview.appendChild(video);
-            }
-            mediaItemElement.dataset.url = url;
-            mediaItemElement.appendChild(preview);
-            
-            // Add description input
-            const descriptionDiv = document.createElement('div');
-            descriptionDiv.className = 'description';
-            const descInput = document.createElement('input');
-            descInput.type = 'text';
-            descInput.value = mediaItem.description || '';
-            descInput.placeholder = 'Description (required)';
-            descInput.required = true;
-            descInput.addEventListener('input', (e) => {
-                mediaItem.description = e.target.value;
-            });
-            descriptionDiv.appendChild(descInput);
-            mediaItemElement.appendChild(descriptionDiv);
-            
-            // Add group selection
-            const groupSelect = document.createElement('select');
-            groupSelect.className = 'group-select';
-            groupSelect.innerHTML = '<option value="">No Group</option>';
-            groups.forEach(group => {
-                const option = document.createElement('option');
-                option.value = group.name;
-                option.textContent = group.name;
-                option.style.backgroundColor = group.color;
-                if (mediaItem.group === group.name) option.selected = true;
-                groupSelect.appendChild(option);
-            });
-            groupSelect.addEventListener('change', (e) => {
-                mediaItem.group = e.target.value;
-                regroupMediaItems();
-                displayMediaItems();
-            });
-            mediaItemElement.appendChild(groupSelect);
-            
-            // Add remove button
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove';
-            removeBtn.textContent = 'Remove';
-            removeBtn.addEventListener('click', () => {
-                if (mediaItemElement.dataset.url) URL.revokeObjectURL(mediaItemElement.dataset.url);
-                mediaItems.splice(index, 1);
-                regroupMediaItems();
-                displayMediaItems();
-                updateMediaCounter();
-            });
-            mediaItemElement.appendChild(removeBtn);
-            
-            mediaQueue.appendChild(mediaItemElement);
+
+        // Add drag handle with icon
+        const dragIcon = document.createElement('span');
+        dragIcon.className = 'drag-icon';
+        dragIcon.innerHTML = '⋮⋮';
+        dragIcon.title = 'Drag to reorder';
+        item.appendChild(dragIcon);
+
+        // Add item numbering
+        const number = document.createElement('span');
+        number.className = 'media-number';
+        number.textContent = `${index + 1}.`;
+        item.appendChild(number);
+
+        // Add preview
+        const preview = document.createElement('div');
+        preview.className = 'preview';
+        let url;
+        if (mediaItem.file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            url = URL.createObjectURL(mediaItem.file);
+            img.src = url;
+            preview.appendChild(img);
+        } else if (mediaItem.file.type.startsWith('video/')) {
+            const video = document.createElement('video');
+            url = URL.createObjectURL(mediaItem.file);
+            video.src = url;
+            video.controls = true;
+            preview.appendChild(video);
+        }
+        item.dataset.url = url;
+        item.appendChild(preview);
+
+        // Add description input
+        const descriptionDiv = document.createElement('div');
+        descriptionDiv.className = 'description';
+        const descLabel = document.createElement('label');
+        descLabel.textContent = 'Description *';
+        const descInput = document.createElement('input');
+        descInput.type = 'text';
+        descInput.value = mediaItem.description || '';
+        descInput.required = true;
+        descInput.placeholder = 'Enter description (required)';
+        descInput.addEventListener('input', (e) => {
+            mediaItem.description = e.target.value;
         });
+        descriptionDiv.appendChild(descLabel);
+        descriptionDiv.appendChild(descInput);
+        item.appendChild(descriptionDiv);
+
+        // Add group selection dropdown
+        const groupSelect = document.createElement('select');
+        groupSelect.className = 'group-select';
+        groupSelect.innerHTML = '<option value="">None</option>';
+        groups.forEach(group => {
+            const option = document.createElement('option');
+            option.value = group.name;
+            option.textContent = group.name;
+            option.style.backgroundColor = group.color;
+            if (mediaItem.group === group.name) option.selected = true;
+            groupSelect.appendChild(option);
+        });
+        groupSelect.addEventListener('change', (e) => {
+            mediaItem.group = e.target.value;
+            regroupMediaItems();
+            displayMediaItems();
+        });
+        item.appendChild(groupSelect);
+
+        // Add remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove';
+        removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', () => {
+            if (item.dataset.url) URL.revokeObjectURL(item.dataset.url);
+            mediaItems.splice(index, 1);
+            regroupMediaItems();
+            displayMediaItems();
+            updateMediaCounter();
+        });
+        item.appendChild(removeBtn);
+
+        mediaQueue.appendChild(item);
     });
-    
-    // Initialize sortable on the media queue
+
+    // Initialize sortable drag-and-drop functionality
     initializeSortable();
     
     // Update media counter
@@ -800,57 +823,112 @@ releaseModal.addEventListener('click', (e) => {
     if (e.target === releaseModal) releaseModal.style.display = 'none';
 });
 
-// Inline groups management
+// Groups Manager Modal
+const groupsManagerModal = document.getElementById('groupsManagerModal');
+const groupsClose = document.getElementById('groupsClose');
+const openGroupsManagerGraphics = document.getElementById('openGroupsManagerGraphics');
+const addGroupBtn = document.getElementById('addGroupBtn');
+const groupsList = document.getElementById('groupsList');
+
 function updateGroupsList() {
-    const groupsListInline = document.getElementById('groupsList');
-    groupsListInline.innerHTML = '';
-    
+    groupsList.innerHTML = '';
     groups.forEach((group) => {
         const groupItem = document.createElement('div');
-        groupItem.className = 'group-item-inline';
-        
+        groupItem.className = 'group-item';
+
         const colorBox = document.createElement('span');
         colorBox.className = 'color-box';
         colorBox.style.backgroundColor = group.color;
-        
+
+        const colorSwatchPopup = document.createElement('div');
+        colorSwatchPopup.className = 'color-swatch-popup';
+        predefinedColors.forEach(color => {
+            const swatch = document.createElement('div');
+            swatch.className = 'color-swatch';
+            swatch.style.backgroundColor = color;
+            if (group.color === color) {
+                swatch.classList.add('selected');
+            }
+            swatch.addEventListener('click', (e) => {
+                e.stopPropagation();
+                group.color = color;
+                updateGroupsList();
+                displayMediaItems();
+                colorSwatchPopup.style.display = 'none';
+            });
+            colorSwatchPopup.appendChild(swatch);
+        });
+
+        colorBox.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isVisible = colorSwatchPopup.style.display === 'flex';
+            document.querySelectorAll('.color-swatch-popup').forEach(popup => popup.style.display = 'none');
+            colorSwatchPopup.style.display = isVisible ? 'none' : 'flex';
+        });
+
         const nameSpan = document.createElement('span');
         nameSpan.textContent = group.name;
-        nameSpan.addEventListener('click', () => {
-            const newName = prompt('Enter new group name:', group.name);
-            if (newName && newName.trim() && newName !== group.name && !groups.some(g => g.name === newName)) {
+        nameSpan.contentEditable = true;
+        nameSpan.addEventListener('blur', () => {
+            const newName = nameSpan.textContent.trim();
+            if (newName && newName !== group.name && !groups.some(g => g.name === newName)) {
                 const oldName = group.name;
-                group.name = newName.trim();
+                group.name = newName;
                 mediaItems.forEach(item => {
                     if (item.group === oldName) item.group = newName;
                 });
                 updateGroupsList();
                 displayMediaItems();
-            } else if (newName && newName !== group.name) {
+            } else if (newName !== group.name) {
+                nameSpan.textContent = group.name;
                 alert('Group name must be unique and non-empty.');
             }
         });
-        
-        const removeBtn = document.createElement('button');
-        removeBtn.innerHTML = '&times;';
-        removeBtn.title = 'Remove Group';
-        removeBtn.addEventListener('click', () => {
-            if (confirm(`Are you sure you want to remove the group "${group.name}"?`)) {
-                groups = groups.filter(g => g.name !== group.name);
-                mediaItems.forEach(item => {
-                    if (item.group === group.name) item.group = '';
-                });
-                updateGroupsList();
-                regroupMediaItems();
-                displayMediaItems();
+        nameSpan.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                nameSpan.blur();
             }
         });
-        
+
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', () => {
+            groups = groups.filter(g => g.name !== group.name);
+            mediaItems.forEach(item => {
+                if (item.group === group.name) item.group = '';
+            });
+            updateGroupsList();
+            regroupMediaItems();
+            displayMediaItems();
+        });
+
         groupItem.appendChild(colorBox);
+        groupItem.appendChild(colorSwatchPopup);
         groupItem.appendChild(nameSpan);
         groupItem.appendChild(removeBtn);
-        groupsListInline.appendChild(groupItem);
+        groupsList.appendChild(groupItem);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.color-box') && !e.target.closest('.color-swatch')) {
+            document.querySelectorAll('.color-swatch-popup').forEach(popup => popup.style.display = 'none');
+        }
     });
 }
+
+function openGroupsModal() {
+    groupsManagerModal.style.display = 'flex';
+    updateGroupsList();
+    document.querySelectorAll('.color-option').forEach(option => option.classList.remove('selected'));
+    document.querySelector('.color-option').classList.add('selected');
+}
+
+openGroupsManagerGraphics.addEventListener('click', openGroupsModal);
+groupsClose.addEventListener('click', () => groupsManagerModal.style.display = 'none');
+groupsManagerModal.addEventListener('click', (e) => {
+    if (e.target === groupsManagerModal) groupsManagerModal.style.display = 'none';
+});
 
 // Set up color selection for groups
 document.querySelectorAll('.color-option').forEach(option => {
@@ -860,8 +938,8 @@ document.querySelectorAll('.color-option').forEach(option => {
     });
 });
 
-// Add group inline
-document.getElementById('addGroupBtn').addEventListener('click', () => {
+// Add group from modal
+addGroupBtn.addEventListener('click', () => {
     const groupName = document.getElementById('newGroupName').value.trim();
     const selectedColor = document.querySelector('.color-option.selected');
     
