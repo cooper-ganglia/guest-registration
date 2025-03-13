@@ -220,6 +220,7 @@ button {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s ease;
     cursor: move;
+    width: 100%;
 }
 
 .media-item.sortable-chosen {
@@ -234,6 +235,8 @@ button {
 
 .grouped {
     border-left: 4px solid;
+    margin-bottom: 2px;
+    background-color: rgba(var(--group-color-rgb), 0.1);
 }
 
 .grouped-first {
@@ -370,7 +373,7 @@ button {
 /* Thumbnail Queue Styles */
 .thumbnail-queue {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 10px;
     margin-top: 10px;
 }
@@ -692,3 +695,31 @@ input[type="checkbox"]:checked::after {
 }
 
 .overlay-content p {
+    margin-bottom: 20px;
+}
+
+.email-option {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-direction: column;
+}
+
+#emailFormsInput {
+    padding: 12px;
+    border-radius: 6px;
+}
+
+@media (min-width: 768px) {
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Media queue vertical layout */
+#mediaQueue {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
