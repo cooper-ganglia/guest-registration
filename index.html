@@ -124,23 +124,21 @@
                         <textarea id="suggestedQuestions" name="suggestedQuestions" required></textarea>
                     </div>
                 </section>
-            </div>
-
-            <div class="graphics-column">
-                <section class="card sticky" id="graphicsSection">
+                
+                <section class="card" id="graphicsSection">
                     <h2>Graphics</h2>
                     <p class="info">Click a thumbnail or use buttons to manage up to 20 images or videos. Order matters for our graphics team.</p>
                     <div id="thumbnailQueue" class="thumbnail-queue"></div>
                     <button type="button" id="addGraphicsBtn" class="group-manager-btn">Add Graphics</button>
                     <button type="button" id="openGroupsManagerGraphics" class="group-manager-btn">Manage Groups</button>
+                    <div class="drop-zone" id="mainDropZone">
+                        <img src="upload-icon.png" alt="Upload Icon" class="upload-icon">
+                        <p>Drag & Drop Images or Videos Here</p>
+                        <p>or</p>
+                        <label for="mainFileInput" class="upload-label">Browse Files</label>
+                        <input type="file" id="mainFileInput" multiple accept="image/*,video/*">
+                    </div>
                 </section>
-                <div class="drop-zone" id="mainDropZone">
-                    <img src="upload-icon.png" alt="Upload Icon" class="upload-icon">
-                    <p>Drag & Drop Images or Videos Here</p>
-                    <p>or</p>
-                    <label for="mainFileInput" class="upload-label">Browse Files</label>
-                    <input type="file" id="mainFileInput" multiple accept="image/*,video/*">
-                </div>
             </div>
 
             <button type="submit" class="submit-btn">Submit Your Registration</button>
