@@ -20,8 +20,13 @@ window.addEventListener('load', () => {
     signatures = {};
     document.getElementById('mainRelease').checked = false;
     console.log('Page loaded with fresh state, localStorage cleared.');
+    
+    // Initialize UI
+    document.querySelector('.color-option').classList.add('selected');
+    updateGroupsList();
 });
 
+// Form field positions
 let positions = {
     date: { x: 0.16, y: 0.70 },
     name: { x: 0.21, y: 0.73 },
@@ -35,6 +40,13 @@ let positions = {
     signature: { x: 0.19, y: 0.76 },
     guardianSignature: { x: 0.19, y: 0.92 }
 };
+
+// Helper function to get formatted current date
+function getCurrentFormattedDate() {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const now = new Date();
+    return `${months[now.getMonth()]} ${now.getDate().toString().padStart(2, '0')}, ${now.getFullYear()}`;
+}
 
 // Add Guest Functionality
 document.getElementById('addGuestBtn').addEventListener('click', () => {
@@ -126,33 +138,55 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// Graphics Modal
-const graphicsModal = document.getElementById('graphicsModal');
-const graphicsClose = document.getElementById('graphicsClose');
-const openGroupsManagerGraphics = document.getElementById('openGroupsManagerGraphics');
-const openGroupsManagerModal = document.getElementById('openGroupsManagerModal');
-
+// Graphics Management - Direct on main page
+// Add Graphics button now triggers file input directly
 addGraphicsBtn.addEventListener('click', () => {
-    graphicsSection.scrollIntoView({ behavior: 'smooth' });
-    setTimeout(() => {
-        graphicsModal.style.display = 'flex';
-        displayMediaItems();
-    }, 500);
+    mainFileInput.click();
 });
 
-graphicsClose.addEventListener('click', () => graphicsModal.style.display = 'none');
-graphicsModal.addEventListener('click', (e) => {
-    if (e.target === graphicsModal) graphicsModal.style.display = 'none';
-});
+// Initialize drag and drop sorting on media queue
+const initializeSortable = () => {
+    new Sortable(mediaQueue, {
+        animation: 300,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'dragging',
+        handle: '.drag-icon',
+        group: 'media',
+        onEnd: (evt) => {
+            const fromIndex = evt.oldIndex;
+            const toIndex = evt.newIndex;
+            const draggedItem = mediaItems[fromIndex];
 
-function openGroupsModal() {
-    groupsManagerModal.style.display = 'flex';
-    updateGroupsList();
-    document.querySelectorAll('.color-option').forEach(option => option.classList.remove('selected'));
-}
+            if (!draggedItem.group) {
+                const movedItem = mediaItems.splice(fromIndex, 1)[0];
+                mediaItems.splice(toIndex, 0, movedItem);
+            } else {
+                const group = draggedItem.group;
+                const groupItems = mediaItems.filter(item => item.group === group);
+                const groupIndexes = groupItems.map(item => mediaItems.indexOf(item));
+                const minIndex = Math.min(...groupIndexes);
+                const maxIndex = Math.max(...groupIndexes);
 
-openGroupsManagerGraphics.addEventListener('click', openGroupsModal);
-openGroupsManagerModal.addEventListener('click', openGroupsModal);
+                const extractedGroup = [];
+                for (let i = maxIndex; i >= minIndex; i--) {
+                    extractedGroup.unshift(mediaItems.splice(minIndex, 1)[0]);
+                }
+
+                let insertIndex = toIndex;
+                if (toIndex > fromIndex) {
+                    insertIndex -= extractedGroup.length - 1;
+                }
+                insertIndex = Math.max(0, Math.min(insertIndex, mediaItems.length));
+
+                mediaItems.splice(insertIndex, 0, ...extractedGroup);
+            }
+
+            regroupMediaItems();
+            displayMediaItems();
+        }
+    });
+};
 
 // Drag and Drop Handlers
 function setupDragAndDrop(dropZone, fileInput) {
@@ -221,8 +255,25 @@ const updateThumbnailQueueDebounced = debounce(() => {
 }, 300);
 
 // Display Thumbnails on Main Page
-function updateThumbnailQueue() {
-    thumbnailQueue.innerHTML = '';
+// Helper function to convert hex to rgb 
+function hexToRgb(hex) {
+    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
+}
+
+// Update the media counter display
+function updateMediaCounter() {
+    const counter = document.getElementById('mediaCounter');
+    if (counter) {
+        counter.textContent = mediaItems.length;
+    }
+}
+
+// Display media items directly on main page
+function displayMediaItems() {
+    mediaQueue.innerHTML = '';
     
     // Group media items by their group
     const groupedMedia = {};
@@ -251,73 +302,120 @@ function updateThumbnailQueue() {
         items.forEach((item, groupIndex) => {
             const {mediaItem, index} = item;
             
-            const thumbnailContainer = document.createElement('div');
-            thumbnailContainer.className = 'media-item';
+            const mediaItemElement = document.createElement('div');
+            mediaItemElement.className = 'media-item';
+            mediaItemElement.dataset.index = index;
+            
             if (groupName !== 'ungrouped') {
-                thumbnailContainer.classList.add('grouped');
-                thumbnailContainer.style.borderLeftColor = groupColor;
-                
-                // Add RGB variables for background color
-                const hexToRgb = (hex) => {
-                    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-                    hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
-                    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
-                };
+                mediaItemElement.classList.add('grouped');
+                mediaItemElement.style.borderLeftColor = groupColor;
                 
                 if (groupColor) {
-                    thumbnailContainer.style.setProperty('--group-color-rgb', hexToRgb(groupColor));
+                    mediaItemElement.style.setProperty('--group-color-rgb', hexToRgb(groupColor));
                 }
                 
                 // Add first/middle/last classes for grouped items
                 if (groupIndex === 0) {
-                    thumbnailContainer.classList.add('grouped-first');
+                    mediaItemElement.classList.add('grouped-first');
                 } else if (groupIndex === items.length - 1) {
-                    thumbnailContainer.classList.add('grouped-last');
+                    mediaItemElement.classList.add('grouped-last');
                 } else {
-                    thumbnailContainer.classList.add('grouped-middle');
+                    mediaItemElement.classList.add('grouped-middle');
                 }
             }
             
-            // Create the main thumbnail
-            const thumbnail = document.createElement('div');
-            thumbnail.className = 'thumbnail-item';
+            // Add drag handle
+            const dragIcon = document.createElement('span');
+            dragIcon.className = 'drag-icon';
+            dragIcon.innerHTML = '⋮⋮';
+            dragIcon.title = 'Drag to reorder';
+            mediaItemElement.appendChild(dragIcon);
+            
+            // Add item number
+            const number = document.createElement('span');
+            number.className = 'media-number';
+            number.textContent = `${index + 1}.`;
+            mediaItemElement.appendChild(number);
+            
+            // Add preview thumbnail
+            const preview = document.createElement('div');
+            preview.className = 'preview';
             let url;
             if (mediaItem.file.type.startsWith('image/')) {
                 const img = document.createElement('img');
                 url = URL.createObjectURL(mediaItem.file);
                 img.src = url;
-                thumbnail.appendChild(img);
+                preview.appendChild(img);
             } else if (mediaItem.file.type.startsWith('video/')) {
                 const video = document.createElement('video');
                 url = URL.createObjectURL(mediaItem.file);
                 video.src = url;
-                video.muted = true;
-                thumbnail.appendChild(video);
+                video.controls = true;
+                preview.appendChild(video);
             }
-            thumbnail.dataset.url = url;
+            mediaItemElement.dataset.url = url;
+            mediaItemElement.appendChild(preview);
             
-            // Add item number and description
-            const number = document.createElement('span');
-            number.className = 'media-number';
-            number.textContent = `${index + 1}.`;
+            // Add description input
+            const descriptionDiv = document.createElement('div');
+            descriptionDiv.className = 'description';
+            const descInput = document.createElement('input');
+            descInput.type = 'text';
+            descInput.value = mediaItem.description || '';
+            descInput.placeholder = 'Description (required)';
+            descInput.required = true;
+            descInput.addEventListener('input', (e) => {
+                mediaItem.description = e.target.value;
+            });
+            descriptionDiv.appendChild(descInput);
+            mediaItemElement.appendChild(descriptionDiv);
             
-            const description = document.createElement('div');
-            description.className = 'description';
-            description.textContent = mediaItem.description || '(No description)';
-            
-            thumbnailContainer.appendChild(number);
-            thumbnailContainer.appendChild(thumbnail);
-            thumbnailContainer.appendChild(description);
-            
-            thumbnailContainer.addEventListener('click', () => {
-                graphicsModal.style.display = 'flex';
+            // Add group selection
+            const groupSelect = document.createElement('select');
+            groupSelect.className = 'group-select';
+            groupSelect.innerHTML = '<option value="">No Group</option>';
+            groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.name;
+                option.textContent = group.name;
+                option.style.backgroundColor = group.color;
+                if (mediaItem.group === group.name) option.selected = true;
+                groupSelect.appendChild(option);
+            });
+            groupSelect.addEventListener('change', (e) => {
+                mediaItem.group = e.target.value;
+                regroupMediaItems();
                 displayMediaItems();
             });
+            mediaItemElement.appendChild(groupSelect);
             
-            thumbnailQueue.appendChild(thumbnailContainer);
+            // Add remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove';
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => {
+                if (mediaItemElement.dataset.url) URL.revokeObjectURL(mediaItemElement.dataset.url);
+                mediaItems.splice(index, 1);
+                regroupMediaItems();
+                displayMediaItems();
+                updateMediaCounter();
+            });
+            mediaItemElement.appendChild(removeBtn);
+            
+            mediaQueue.appendChild(mediaItemElement);
         });
     });
+    
+    // Initialize sortable on the media queue
+    initializeSortable();
+    
+    // Update media counter
+    updateMediaCounter();
+}
+
+// This function is no longer needed since we're directly using displayMediaItems
+function updateThumbnailQueue() {
+    displayMediaItems();
 }
 
 // Regroup media items
@@ -575,7 +673,7 @@ function openReleaseModal(index) {
     console.log(`Opening modal for index ${index}, hasSignature: ${hasSignature}, data:`, signatureData);
 
     const fields = {
-        date: signatureData.fields?.date || 'March 07, 2025',
+        date: signatureData.fields?.date || getCurrentFormattedDate(),
         name: signatureData.fields?.name || '',
         address: signatureData.fields?.address || '',
         city: signatureData.fields?.city || '',
@@ -702,107 +800,59 @@ releaseModal.addEventListener('click', (e) => {
     if (e.target === releaseModal) releaseModal.style.display = 'none';
 });
 
-// Groups Manager Modal
-const groupsManagerModal = document.getElementById('groupsManagerModal');
-const groupsClose = document.getElementById('groupsClose');
-const addGroupBtn = document.getElementById('addGroupBtn');
-const groupsList = document.getElementById('groupsList');
-
+// Inline groups management
 function updateGroupsList() {
-    groupsList.innerHTML = '';
+    const groupsListInline = document.getElementById('groupsList');
+    groupsListInline.innerHTML = '';
+    
     groups.forEach((group) => {
         const groupItem = document.createElement('div');
-        groupItem.className = 'group-item';
-
+        groupItem.className = 'group-item-inline';
+        
         const colorBox = document.createElement('span');
         colorBox.className = 'color-box';
         colorBox.style.backgroundColor = group.color;
-
-        const colorSwatchPopup = document.createElement('div');
-        colorSwatchPopup.className = 'color-swatch-popup';
-        predefinedColors.forEach(color => {
-            const swatch = document.createElement('div');
-            swatch.className = 'color-swatch';
-            swatch.style.backgroundColor = color;
-            if (group.color === color) {
-                swatch.classList.add('selected');
-            }
-            swatch.addEventListener('click', (e) => {
-                e.stopPropagation();
-                group.color = color;
-                updateGroupsList();
-                displayMediaItems();
-                updateThumbnailQueueDebounced();
-                colorSwatchPopup.style.display = 'none';
-            });
-            colorSwatchPopup.appendChild(swatch);
-        });
-
-        colorBox.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isVisible = colorSwatchPopup.style.display === 'flex';
-            document.querySelectorAll('.color-swatch-popup').forEach(popup => popup.style.display = 'none');
-            colorSwatchPopup.style.display = isVisible ? 'none' : 'flex';
-        });
-
+        
         const nameSpan = document.createElement('span');
         nameSpan.textContent = group.name;
-        nameSpan.contentEditable = true;
-        nameSpan.addEventListener('blur', () => {
-            const newName = nameSpan.textContent.trim();
-            if (newName && newName !== group.name && !groups.some(g => g.name === newName)) {
+        nameSpan.addEventListener('click', () => {
+            const newName = prompt('Enter new group name:', group.name);
+            if (newName && newName.trim() && newName !== group.name && !groups.some(g => g.name === newName)) {
                 const oldName = group.name;
-                group.name = newName;
+                group.name = newName.trim();
                 mediaItems.forEach(item => {
                     if (item.group === oldName) item.group = newName;
                 });
                 updateGroupsList();
                 displayMediaItems();
-                updateThumbnailQueueDebounced();
-            } else if (newName !== group.name) {
-                nameSpan.textContent = group.name;
+            } else if (newName && newName !== group.name) {
                 alert('Group name must be unique and non-empty.');
             }
         });
-        nameSpan.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                nameSpan.blur();
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '&times;';
+        removeBtn.title = 'Remove Group';
+        removeBtn.addEventListener('click', () => {
+            if (confirm(`Are you sure you want to remove the group "${group.name}"?`)) {
+                groups = groups.filter(g => g.name !== group.name);
+                mediaItems.forEach(item => {
+                    if (item.group === group.name) item.group = '';
+                });
+                updateGroupsList();
+                regroupMediaItems();
+                displayMediaItems();
             }
         });
-
-        const removeBtn = document.createElement('button');
-        removeBtn.textContent = 'Remove';
-        removeBtn.addEventListener('click', () => {
-            groups = groups.filter(g => g.name !== group.name);
-            mediaItems.forEach(item => {
-                if (item.group === group.name) item.group = '';
-            });
-            updateGroupsList();
-            regroupMediaItems();
-            displayMediaItems();
-            updateThumbnailQueueDebounced();
-        });
-
+        
         groupItem.appendChild(colorBox);
-        groupItem.appendChild(colorSwatchPopup);
         groupItem.appendChild(nameSpan);
         groupItem.appendChild(removeBtn);
-        groupsList.appendChild(groupItem);
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.color-box') && !e.target.closest('.color-swatch')) {
-            document.querySelectorAll('.color-swatch-popup').forEach(popup => popup.style.display = 'none');
-        }
+        groupsListInline.appendChild(groupItem);
     });
 }
 
-groupsClose.addEventListener('click', () => groupsManagerModal.style.display = 'none');
-groupsManagerModal.addEventListener('click', (e) => {
-    if (e.target === groupsManagerModal) groupsManagerModal.style.display = 'none';
-});
-
+// Set up color selection for groups
 document.querySelectorAll('.color-option').forEach(option => {
     option.addEventListener('click', () => {
         document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
@@ -810,16 +860,16 @@ document.querySelectorAll('.color-option').forEach(option => {
     });
 });
 
-addGroupBtn.addEventListener('click', () => {
+// Add group inline
+document.getElementById('addGroupBtn').addEventListener('click', () => {
     const groupName = document.getElementById('newGroupName').value.trim();
     const selectedColor = document.querySelector('.color-option.selected');
+    
     if (groupName && selectedColor && !groups.some(g => g.name === groupName)) {
         groups.push({ name: groupName, color: selectedColor.getAttribute('data-color') });
         document.getElementById('newGroupName').value = '';
         updateGroupsList();
-        regroupMediaItems();
         displayMediaItems();
-        updateThumbnailQueueDebounced();
     } else {
         alert('Please enter a unique group name and select a color.');
     }
