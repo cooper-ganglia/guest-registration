@@ -1,11 +1,8 @@
 const form = document.getElementById('registrationForm');
 const mainFileInput = document.getElementById('mainFileInput');
-const modalFileInput = document.getElementById('modalFileInput');
 const mediaQueue = document.getElementById('mediaQueue');
-const thumbnailQueue = document.getElementById('thumbnailQueue');
 const addGraphicsBtn = document.getElementById('addGraphicsBtn');
 const mainDropZone = document.getElementById('mainDropZone');
-const modalDropZone = document.getElementById('modalDropZone');
 let mediaItems = [];
 let guestIndex = 0;
 let signatures = {};
@@ -15,15 +12,59 @@ const predefinedColors = [
 ];
 let groups = [];
 
-window.addEventListener('load', () => {
+window.addEventListener('DOMContentLoaded', () => {
     localStorage.clear();
     signatures = {};
     document.getElementById('mainRelease').checked = false;
     console.log('Page loaded with fresh state, localStorage cleared.');
     
-    // Initialize UI
-    document.querySelector('.color-option').classList.add('selected');
-    updateGroupsList();
+    // Initialize UI elements
+    const firstColorOption = document.querySelector('.color-option');
+    if (firstColorOption) {
+        firstColorOption.classList.add('selected');
+    }
+    
+    // Get references to buttons/elements after DOM is loaded
+    const openGroupsManagerGraphics = document.getElementById('openGroupsManagerGraphics');
+    if (openGroupsManagerGraphics) {
+        openGroupsManagerGraphics.addEventListener('click', openGroupsModal);
+    }
+    
+    // Set up Add Graphics button to open file input
+    if (addGraphicsBtn && mainFileInput) {
+        addGraphicsBtn.addEventListener('click', () => {
+            mainFileInput.click();
+        });
+    }
+    
+    // Set up the Add Group button
+    const addGroupBtn = document.getElementById('addGroupBtn');
+    if (addGroupBtn) {
+        addGroupBtn.addEventListener('click', () => {
+            const groupName = document.getElementById('newGroupName').value.trim();
+            const selectedColor = document.querySelector('.color-option.selected');
+            
+            if (groupName && selectedColor && !groups.some(g => g.name === groupName)) {
+                groups.push({ name: groupName, color: selectedColor.getAttribute('data-color') });
+                document.getElementById('newGroupName').value = '';
+                updateGroupsList();
+                displayMediaItems();
+            } else {
+                alert('Please enter a unique group name and select a color.');
+            }
+        });
+    }
+    
+    // Set up color options
+    document.querySelectorAll('.color-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+        });
+    });
+    
+    // Display initial empty state
+    displayMediaItems();
 });
 
 // Form field positions
@@ -139,10 +180,7 @@ window.addEventListener('scroll', () => {
 });
 
 // Graphics Management
-// Add Graphics button now triggers file input directly
-addGraphicsBtn.addEventListener('click', () => {
-    mainFileInput.click();
-});
+// Event handlers are set up in DOMContentLoaded
 
 // Initialize drag and drop sorting on media queue
 const initializeSortable = () => {
@@ -264,13 +302,12 @@ function handleFiles(files) {
     mediaItems = mediaItems.concat(newMediaItems);
     regroupMediaItems();
     displayMediaItems();
-    updateThumbnailQueueDebounced();
 }
 
+// Setup drag and drop for the main drop zone
 setupDragAndDrop(mainDropZone, mainFileInput);
-setupDragAndDrop(modalDropZone, modalFileInput);
 
-// Debounce function
+// Debounce function - keeping for reference but not using
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -282,10 +319,6 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
-
-const updateThumbnailQueueDebounced = debounce(() => {
-    updateThumbnailQueue();
-}, 300);
 
 // Display Thumbnails on Main Page
 // Helper function to convert hex to rgb 
@@ -301,6 +334,16 @@ function updateMediaCounter() {
     const counter = document.getElementById('mediaCounter');
     if (counter) {
         counter.textContent = mediaItems.length;
+    }
+    
+    // Also update floatingAddGraphics visibility based on count
+    const floatingAddGraphics = document.getElementById('floatingAddGraphics');
+    if (floatingAddGraphics) {
+        if (mediaItems.length >= 20) {
+            floatingAddGraphics.classList.add('hidden');
+        } else {
+            floatingAddGraphics.classList.remove('hidden');
+        }
     }
 }
 
@@ -436,10 +479,16 @@ function displayMediaItems() {
     updateMediaCounter();
 }
 
-// This function is no longer needed since we're directly using displayMediaItems
+// Ensure we don't have functions calling other no-longer-existent functions
 function updateThumbnailQueue() {
+    // Remove dependency on thumbnail queue - just display media
     displayMediaItems();
 }
+
+// Remove debounce function call
+const updateThumbnailQueueDebounced = () => {
+    displayMediaItems();
+};
 
 // Regroup media items
 function regroupMediaItems() {
@@ -918,43 +967,41 @@ function updateGroupsList() {
 }
 
 function openGroupsModal() {
+    const groupsManagerModal = document.getElementById('groupsManagerModal');
+    if (!groupsManagerModal) return;
+    
     groupsManagerModal.style.display = 'flex';
     updateGroupsList();
-    document.querySelectorAll('.color-option').forEach(option => option.classList.remove('selected'));
-    document.querySelector('.color-option').classList.add('selected');
+    
+    // Make sure at least one color is selected
+    const colorOptions = document.querySelectorAll('.color-option');
+    const hasSelected = Array.from(colorOptions).some(option => option.classList.contains('selected'));
+    
+    if (!hasSelected && colorOptions.length > 0) {
+        colorOptions[0].classList.add('selected');
+    }
 }
 
-openGroupsManagerGraphics.addEventListener('click', openGroupsModal);
-groupsClose.addEventListener('click', () => groupsManagerModal.style.display = 'none');
-groupsManagerModal.addEventListener('click', (e) => {
-    if (e.target === groupsManagerModal) groupsManagerModal.style.display = 'none';
-});
-
-// Set up color selection for groups
-document.querySelectorAll('.color-option').forEach(option => {
-    option.addEventListener('click', () => {
-        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
-        option.classList.add('selected');
-    });
-});
-
-// Add group from modal
-addGroupBtn.addEventListener('click', () => {
-    const groupName = document.getElementById('newGroupName').value.trim();
-    const selectedColor = document.querySelector('.color-option.selected');
+// Event listener is added in DOMContentLoaded
+// Add event listeners to modal buttons in DOMContentLoaded instead
+window.addEventListener('DOMContentLoaded', () => {
+    // ...existing code...
     
-    if (groupName && selectedColor && !groups.some(g => g.name === groupName)) {
-        groups.push({ name: groupName, color: selectedColor.getAttribute('data-color') });
-        document.getElementById('newGroupName').value = '';
-        updateGroupsList();
-        displayMediaItems();
-    } else {
-        alert('Please enter a unique group name and select a color.');
+    // Set up modal close buttons
+    const groupsClose = document.getElementById('groupsClose');
+    const groupsManagerModal = document.getElementById('groupsManagerModal');
+    
+    if (groupsClose && groupsManagerModal) {
+        groupsClose.addEventListener('click', () => groupsManagerModal.style.display = 'none');
+        groupsManagerModal.addEventListener('click', (e) => {
+            if (e.target === groupsManagerModal) groupsManagerModal.style.display = 'none';
+        });
     }
 });
 
-displayMediaItems();
-updateThumbnailQueue();
+// Event handlers moved to DOMContentLoaded
+
+// Initial display will happen in DOMContentLoaded
 
 // Form Submission with Download or Email Option
 form.addEventListener('submit', (e) => {
