@@ -127,10 +127,29 @@
                 
                 <section class="card" id="graphicsSection">
                     <h2>Graphics</h2>
-                    <p class="info">Click a thumbnail or use buttons to manage up to 20 images or videos. Order matters for our graphics team.</p>
-                    <div id="thumbnailQueue" class="thumbnail-queue"></div>
-                    <button type="button" id="addGraphicsBtn" class="group-manager-btn">Add Graphics</button>
-                    <button type="button" id="openGroupsManagerGraphics" class="group-manager-btn">Manage Groups</button>
+                    <p class="info"><strong>IMPORTANT: Order matters for our graphics team!</strong> Drag & drop items to reorder. Use groups to organize related images.</p>
+                    
+                    <div class="groups-management">
+                        <h3>Manage Groups</h3>
+                        <div class="group-form-inline">
+                            <input type="text" id="newGroupName" placeholder="New Group Name">
+                            <div class="color-selector-inline">
+                                <div class="color-option" data-color="#FF6B6B" style="background-color: #FF6B6B;"></div>
+                                <div class="color-option" data-color="#4ECDC4" style="background-color: #4ECDC4;"></div>
+                                <div class="color-option" data-color="#45B7D1" style="background-color: #45B7D1;"></div>
+                                <div class="color-option" data-color="#96CEB4" style="background-color: #96CEB4;"></div>
+                                <div class="color-option" data-color="#FFEEAD" style="background-color: #FFEEAD;"></div>
+                                <div class="color-option" data-color="#D4A5A5" style="background-color: #D4A5A5;"></div>
+                                <div class="color-option" data-color="#9B59B6" style="background-color: #9B59B6;"></div>
+                                <div class="color-option" data-color="#3498DB" style="background-color: #3498DB;"></div>
+                                <div class="color-option" data-color="#E74C3C" style="background-color: #E74C3C;"></div>
+                                <div class="color-option" data-color="#2ECC71" style="background-color: #2ECC71;"></div>
+                            </div>
+                            <button type="button" id="addGroupBtn">Add Group</button>
+                        </div>
+                        <div id="groupsList" class="groups-list-inline"></div>
+                    </div>
+                    
                     <div class="drop-zone" id="mainDropZone">
                         <img src="upload-icon.png" alt="Upload Icon" class="upload-icon">
                         <p>Drag & Drop Images or Videos Here</p>
@@ -138,6 +157,15 @@
                         <label for="mainFileInput" class="upload-label">Browse Files</label>
                         <input type="file" id="mainFileInput" multiple accept="image/*,video/*">
                     </div>
+                    
+                    <div class="media-controls">
+                        <button type="button" id="addGraphicsBtn" class="group-manager-btn">
+                            <span class="button-icon">+</span> Add Graphics
+                        </button>
+                        <div class="media-counter"><span id="mediaCounter">0</span>/20 items</div>
+                    </div>
+                    
+                    <div id="mediaQueue" class="media-queue"></div>
                 </section>
             </div>
 
@@ -241,52 +269,7 @@
         </div>
     </div>
 
-    <!-- Modal for Graphics -->
-    <div id="graphicsModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close" id="graphicsClose">×</span>
-            <h2>Graphics Manager</h2>
-            <div class="graphics-content">
-                <div class="drop-zone" id="modalDropZone">
-                    <img src="upload-icon.png" alt="Upload Icon" class="upload-icon">
-                    <p>Drag & Drop Images or Videos Here</p>
-                    <p>or</p>
-                    <label for="modalFileInput" class="upload-label">Browse Files</label>
-                    <input type="file" id="modalFileInput" multiple accept="image/*,video/*">
-                </div>
-                <div id="mediaQueue"></div>
-                <button type="button" id="openGroupsManagerModal" class="group-manager-btn">Manage Groups</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Groups Manager -->
-    <div id="groupsManagerModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close" id="groupsClose">×</span>
-            <h3>Groups Manager</h3>
-            <div class="groups-manager">
-                <div id="groupsList"></div>
-                <div class="group-form">
-                    <input type="text" id="newGroupName" placeholder="New Group Name">
-                    <label>Select Color:</label>
-                    <div class="color-selector">
-                        <div class="color-option" data-color="#FF6B6B" style="background-color: #FF6B6B;"></div>
-                        <div class="color-option" data-color="#4ECDC4" style="background-color: #4ECDC4;"></div>
-                        <div class="color-option" data-color="#45B7D1" style="background-color: #45B7D1;"></div>
-                        <div class="color-option" data-color="#96CEB4" style="background-color: #96CEB4;"></div>
-                        <div class="color-option" data-color="#FFEEAD" style="background-color: #FFEEAD;"></div>
-                        <div class="color-option" data-color="#D4A5A5" style="background-color: #D4A5A5;"></div>
-                        <div class="color-option" data-color="#9B59B6" style="background-color: #9B59B6;"></div>
-                        <div class="color-option" data-color="#3498DB" style="background-color: #3498DB;"></div>
-                        <div class="color-option" data-color="#E74C3C" style="background-color: #E74C3C;"></div>
-                        <div class="color-option" data-color="#2ECC71" style="background-color: #2ECC71;"></div>
-                    </div>
-                    <button type="button" id="addGroupBtn">Add Group</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- We've removed the Graphics and Groups Manager modals since all functionality is now inline -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
